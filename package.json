@@ -1,28 +1,53 @@
 {
   "name": "nuhoud-dashboard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "NUHOUD Platform Dashboard - Job Portal Management System",
+  "author": "NUHOUD Team",
+  "license": "MIT",
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.15.20",
+    "@mui/material": "^5.15.20",
+    "@mui/x-data-grid": "^7.7.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "axios": "^1.7.2",
+    "jwt-decode": "^3.1.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.23.1",
     "react-scripts": "5.0.1",
+    "recharts": "^2.12.7",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:prod": "REACT_APP_ENVIRONMENT=production react-scripts build",
+    "build:staging": "REACT_APP_ENVIRONMENT=staging react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,md}",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "deploy": "npm run build && ./deploy.sh",
+    "switch-to-real-api": "node scripts/switch-to-real-api.js",
+    "fix-warnings": "node scripts/fix-eslint-warnings.js"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-unused-vars": "warn",
+      "no-console": "warn"
+    }
   },
   "browserslist": {
     "production": [
@@ -35,5 +60,21 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuhoud/nuhoud-dashboard.git"
+  },
+  "keywords": [
+    "react",
+    "dashboard",
+    "job-portal",
+    "management",
+    "mui",
+    "typescript"
+  ]
 }

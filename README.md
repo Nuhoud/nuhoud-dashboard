@@ -1,70 +1,165 @@
-# Getting Started with Create React App
+# NUHOUD Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React-based dashboard for the NUHOUD platform, providing admin and employer interfaces for job portal management.
 
-## Available Scripts
+## 🚀 Quick Start
 
-In the project directory, you can run:
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
 
-### `npm start`
+### Installation
+```bash
+npm install
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Development
+```bash
+npm start
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The application will be available at `http://localhost:3001`
 
-### `npm test`
+## 🔐 Test Credentials
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+For development and testing purposes, you can use these credentials:
 
-### `npm run build`
+### Admin Access
+- **Email:** admin@nuhoud.com
+- **Password:** admin123456
+- **Access:** Full admin dashboard with user management, job offers, and applications
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Employer Access
+- **Email:** employer@nuhoud.com
+- **Password:** employer123456
+- **Access:** Employer dashboard for job posting and applicant management
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🏗️ Project Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── MainLayout.js   # Main application layout
+│   ├── Sidebar.js      # Navigation sidebar
+│   └── Topbar.js       # Top navigation bar
+├── pages/              # Page components
+│   ├── Login.js        # Authentication page
+│   ├── admin/          # Admin-specific pages
+│   └── employer/       # Employer-specific pages
+├── services/           # API services
+│   └── api.js         # API client and endpoints
+├── config/            # Configuration files
+│   └── environment.js # Environment configuration
+└── routes/            # Routing configuration
+    └── ProtectedRoute.js
+```
 
-### `npm run eject`
+## 🔧 Configuration
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Environment Variables
+Create a `.env` file in the root directory:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```env
+# Development
+REACT_APP_API_URL_MAIN=http://localhost:3000
+REACT_APP_API_URL_JOBS=http://localhost:3000
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Production
+REACT_APP_API_URL_MAIN=https://api.nuhoud.com
+REACT_APP_API_URL_JOBS=https://jobs-api.nuhoud.com
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🚀 Production Deployment
 
-## Learn More
+### Docker Deployment
+```bash
+# Build the application
+docker build -t nuhoud-dashboard .
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# Run with docker-compose
+docker-compose up -d
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Manual Deployment
+```bash
+# Build for production
+npm run build
 
-### Code Splitting
+# Deploy the build folder to your web server
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 📋 Features
 
-### Analyzing the Bundle Size
+### Admin Dashboard
+- User management (create, view, update, delete)
+- Job offers management
+- Application tracking
+- Analytics and reporting
+- System configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Employer Dashboard
+- Job posting and management
+- Applicant tracking
+- Profile management
+- Job analytics
 
-### Making a Progressive Web App
+### Authentication
+- Role-based access control
+- JWT token authentication
+- Secure login/logout
+- Password validation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 🛠️ Development
 
-### Advanced Configuration
+### Available Scripts
+- `npm start` - Start development server
+- `npm build` - Build for production
+- `npm test` - Run tests
+- `npm run lint` - Run ESLint
+- `npm run deploy` - Deploy to production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Code Style
+This project uses ESLint for code quality. Run `npm run lint` to check for issues.
 
-### Deployment
+## 🔒 Security
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- JWT token-based authentication
+- Role-based access control
+- Input validation and sanitization
+- Secure API communication
+- Environment-based configuration
 
-### `npm run build` fails to minify
+## 📱 Responsive Design
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The dashboard is fully responsive and works on:
+- Desktop computers
+- Tablets
+- Mobile devices
+
+## 🎨 UI/UX Features
+
+- Modern Material-UI design
+- Dark/light theme support
+- Smooth animations and transitions
+- Intuitive navigation
+- Loading states and error handling
+
+## 🔄 API Integration
+
+The dashboard integrates with:
+- Main backend API (port 3000)
+- Job portal service API (port 4000)
+- File upload service
+- Email notification service
+
+## 📞 Support
+
+For technical support or questions, please contact the development team.
+
+## 📄 License
+
+This project is proprietary software for the NUHOUD platform.
+
+---
+
+**Note:** This is a development version with mock authentication. For production deployment, ensure proper backend integration and security measures are in place.
