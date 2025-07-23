@@ -73,7 +73,7 @@ const JobApplicationsList = () => {
   }, [jobId, page, pageSize, sortModel]);
 
   const handleViewApplication = (applicationId) => {
-    navigate(`/admin/applications/${applicationId}`);
+    navigate(`/application/${applicationId}`);
   };
 
   const handleDownloadResume = (resumeUrl) => {

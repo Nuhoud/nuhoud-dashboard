@@ -306,6 +306,11 @@ export const getApplications = async (filters = {}) => {
 
 export const getApplication = (id) => apiJobs.get(`/application/${id}`, { headers: getAuthHeaders() });
 
+export const updateApplication = async (applicationId, data) => {
+  const res = await apiJobs.patch(`/application/${applicationId}`, data, { headers: getAuthHeaders() });
+  return res.data;
+};
+
 export const updateApplicationStatus = async (applicationId, data) => {
   const response = await apiJobs.patch(`/application/${applicationId}/status`, data, { headers: getAuthHeaders() });
   return response.data;

@@ -166,7 +166,7 @@ const Applications = () => {
   }, [page, pageSize, sortModel, filterModel]);
 
   const handleView = (id) => {
-    navigate(`/admin/applications/${id}`);
+    navigate(`/admin/application/${id}`);
   };
 
   const handleEdit = (app) => {

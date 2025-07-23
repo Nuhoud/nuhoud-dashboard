@@ -10,6 +10,7 @@ import CreateAdmin from './pages/admin/CreateAdmin';
 import CreateEmployer from './pages/admin/CreateEmployer';
 import JobOffers from './pages/admin/JobOffers';
 import JobApplicationsList from './pages/admin/JobApplicationsList';
+import ApplicationDetail from './pages/admin/ApplicationDetail';
 import JobApplicants from './pages/admin/JobApplicants';
 import Users from './pages/admin/Users';
 
@@ -76,6 +77,9 @@ function App() {
               <Route path="jobs/:jobId/applicants" element={<Applicants />} />
               <Route path="profile" element={<Profile />} />
             </Route>
+
+            {/* Shared Routes */}
+            <Route path="application/:id" element={<ApplicationDetail />} />
 
             {/* Default redirect */}
             <Route index element={<Navigate to="/login" replace />} />
