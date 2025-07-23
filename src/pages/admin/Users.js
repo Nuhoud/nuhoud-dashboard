@@ -31,7 +31,7 @@ const columns = [
     headerName: 'Role',
     width: 120,
     renderCell: (params) => {
-      if (!params || !params.row) return null;
+      if (!params?.row) return null;
       let roleValue = params.row.role;
       // Only allow 'user', 'admin', or 'employer'
       if (!['user', 'admin', 'employer'].includes(roleValue)) {
@@ -60,7 +60,7 @@ const columns = [
     headerName: 'Actions',
     width: 120,
     renderCell: (params) => {
-      if (!params || !params.row) return null;
+      if (!params?.row) return null;
       return (
         <Box>
           <IconButton

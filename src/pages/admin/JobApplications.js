@@ -31,6 +31,7 @@ const AdminJobApplications = () => {
       headerName: 'Salary',
       width: 150,
       valueGetter: (params) => {
+        if (!params?.row) return '';
         const salary = params.row.salaryRange;
         return salary ? `${salary.min} - ${salary.max} ${salary.currency}` : 'Not specified';
       },
@@ -39,19 +40,22 @@ const AdminJobApplications = () => {
       field: 'deadline',
       headerName: 'Deadline',
       width: 120,
-      valueGetter: (params) => new Date(params.row.deadline).toLocaleDateString(),
+      valueGetter: (params) => params?.row ? new Date(params.row.deadline).toLocaleDateString() : '',
     },
     {
       field: 'status',
       headerName: 'Status',
       width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value === 'مفتوح' ? 'success' : 'default'}
-          size="small"
-        />
-      ),
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        return (
+          <Chip
+            label={params.value}
+            color={params.value === 'مفتوح' ? 'success' : 'default'}
+            size="small"
+          />
+        );
+      },
     },
     {
       field: 'actions',

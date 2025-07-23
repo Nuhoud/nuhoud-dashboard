@@ -135,9 +135,9 @@ const JobApplications = () => {
             <TableBody>
               {applications.map((application) => (
                 <TableRow key={application._id}>
-                  <TableCell>{application.applicant?.name || 'N/A'}</TableCell>
-                  <TableCell>{application.applicant?.email || 'N/A'}</TableCell>
-                  <TableCell>{application.applicant?.phone || 'N/A'}</TableCell>
+                  <TableCell>{application.userSnap?.name || application.applicant?.name || 'N/A'}</TableCell>
+                  <TableCell>{application.userSnap?.email || application.applicant?.email || 'N/A'}</TableCell>
+                  <TableCell>{application.userSnap?.mobile || application.userSnap?.phone || application.applicant?.phone || 'N/A'}</TableCell>
                   <TableCell>
                     {new Date(application.postedAt).toLocaleDateString()}
                   </TableCell>

@@ -116,7 +116,7 @@ const JobApplicantsAdmin = () => {
       headerName: 'Applied Date',
       width: 120,
       valueGetter: (params) => {
-        if (!params.row || !params.value) return 'N/A';
+        if (!params?.row || !params.value) return 'N/A';
         return params.value ? new Date(params.value).toLocaleDateString() : 'N/A';
       },
     },
@@ -125,24 +125,27 @@ const JobApplicantsAdmin = () => {
       headerName: 'Actions',
       width: 120,
       sortable: false,
-      renderCell: (params) => (
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => handleViewProfile(params.row.id)}
-          sx={{
-            borderRadius: 2,
-            borderColor: '#1976d2',
-            color: '#1976d2',
-            '&:hover': {
-              borderColor: '#1565c0',
-              backgroundColor: 'rgba(25, 118, 210, 0.08)',
-            }
-          }}
-        >
-          View Profile
-        </Button>
-      ),
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        return (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => handleViewProfile(params.row.id)}
+            sx={{
+              borderRadius: 2,
+              borderColor: '#1976d2',
+              color: '#1976d2',
+              '&:hover': {
+                borderColor: '#1565c0',
+                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+              }
+            }}
+          >
+            View Profile
+          </Button>
+        );
+      },
     },
   ];
 

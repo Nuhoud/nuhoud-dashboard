@@ -198,22 +198,18 @@ export const getJobOffers = async (filters = {}) => {
   return response.data;
 };
 
-export const getEmployerJobs = async () => {
+export const getEmployerJobs = async ({ page = 1, limit = 10, sortBy = 'postedAt', sortOrder = 'desc' } = {}) => {
   try {
-    console.log('Fetching employer jobs...');
-    console.log('Headers:', getAuthHeaders());
-    const response = await apiJobs.get('/job-offers/employer/my-jobs', {
+    const response = await apiJobs.get('/job-offers', {
+      params: { page, limit, sortBy, sortOrder },
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
       }
     });
-    console.log('Employer jobs response:', response.data);
-    // Ensure we return an array
-    return Array.isArray(response.data) ? response.data : response.data.data || [];
+    return response.data;
   } catch (error) {
     console.error('Error fetching employer jobs:', error);
-    console.error('Error response:', error.response?.data);
     throw error;
   }
 };

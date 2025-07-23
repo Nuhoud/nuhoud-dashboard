@@ -50,36 +50,39 @@ const Applications = () => {
       field: 'jobTitle', 
       headerName: 'Job Title', 
       width: 250,
-      valueGetter: (params) => params.row.jobOffer?.title || 'N/A'
+      valueGetter: (params) => params?.row?.jobOffer?.title || 'N/A'
     },
     { 
       field: 'applicantName', 
       headerName: 'Applicant', 
       width: 200,
-      valueGetter: (params) => params.row.applicant?.name || 'N/A'
+      valueGetter: (params) => params?.row?.userSnap?.name || 'N/A'
     },
     { 
       field: 'applicantEmail', 
       headerName: 'Email', 
       width: 220,
-      valueGetter: (params) => params.row.applicant?.email || 'N/A'
+      valueGetter: (params) => params?.row?.userSnap?.email || 'N/A'
     },
     {
       field: 'status',
       headerName: 'Status',
       width: 130,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={
-            params.value === 'Pending' ? 'warning' :
-            params.value === 'Accepted' ? 'success' :
-            params.value === 'Rejected' ? 'error' :
-            params.value === 'Interviewing' ? 'info' : 'default'
-          }
-          size="small"
-        />
-      ),
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        return (
+          <Chip
+            label={params.value}
+            color={
+              params.value === 'Pending' ? 'warning' :
+              params.value === 'Accepted' ? 'success' :
+              params.value === 'Rejected' ? 'error' :
+              params.value === 'Interviewing' ? 'info' : 'default'
+            }
+            size="small"
+          />
+        );
+      },
     },
     {
       field: 'createdAt',

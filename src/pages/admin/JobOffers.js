@@ -43,7 +43,7 @@ const JobOffers = () => {
       headerName: 'Company', 
       width: 200,
       valueGetter: (params) => {
-        if (!params || !params.row) return 'N/A';
+        if (!params?.row) return 'N/A';
         return params.row.employer?.company || 'N/A';
       }
     },

@@ -25,7 +25,8 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
-  Grid
+  Grid,
+  TablePagination
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -42,18 +43,27 @@ const MyJobs = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [editedJob, setEditedJob] = useState(null);
+  const [page, setPage] = useState(0); // TablePagination is 0-based
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [sortBy, setSortBy] = useState('postedAt');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await getEmployerJobs();
-      console.log('Jobs response:', response); // Debug log
-      // Ensure we have an array of jobs
-      setJobs(Array.isArray(response) ? response : response.data || []);
+      const response = await getEmployerJobs({
+        page: page + 1, // API is 1-based
+        limit,
+        sortBy,
+        sortOrder
+      });
+      setJobs(response.data || []);
+      setTotal(response.total || 0);
     } catch (err) {
-      console.error('Error fetching jobs:', err);
       setError('Failed to load jobs. Please try again.');
-      setJobs([]); // Set empty array on error
+      setJobs([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -61,7 +71,8 @@ const MyJobs = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+    // eslint-disable-next-line
+  }, [page, limit, sortBy, sortOrder]);
 
   const handleEdit = (job) => {
     setSelectedJob(job);
@@ -144,19 +155,22 @@ const MyJobs = () => {
       headerName: 'Actions',
       width: 120,
       sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <Tooltip title="View Applications">
-            <IconButton
-              onClick={() => navigate(`/employer/jobs/${params.row._id}/applications`)}
-              color="primary"
-              size="small"
-            >
-              <PeopleIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        return (
+          <Box>
+            <Tooltip title="View Applications">
+              <IconButton
+                onClick={() => navigate(`/employer/jobs/${params.row._id}/applications`)}
+                color="primary"
+                size="small"
+              >
+                <PeopleIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
     },
   ];
 
@@ -254,6 +268,15 @@ const MyJobs = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={total}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={limit}
+            onRowsPerPageChange={e => { setLimit(parseInt(e.target.value, 10)); setPage(0); }}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
         </Paper>
       )}
 

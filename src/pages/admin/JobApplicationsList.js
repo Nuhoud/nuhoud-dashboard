@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -10,12 +10,17 @@ import {
   IconButton,
   Tooltip,
   TablePagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+
 import { getJobApplications, getJobOffer } from '../../services/api';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
-import { useNavigate } from 'react-router-dom';
 
 const JobApplicationsList = () => {
   const { jobId } = useParams();
@@ -28,74 +33,6 @@ const JobApplicationsList = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [sortModel, setSortModel] = useState([{ field: 'postedAt', sort: 'desc' }]);
-
-  const columns = [
-    { 
-      field: 'applicantName', 
-      headerName: 'Applicant Name', 
-      width: 200,
-      valueGetter: (params) => params.row.applicant?.name || 'N/A'
-    },
-    { 
-      field: 'applicantEmail', 
-      headerName: 'Email', 
-      width: 200,
-      valueGetter: (params) => params.row.applicant?.email || 'N/A'
-    },
-    { 
-      field: 'status', 
-      headerName: 'Status', 
-      width: 130,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={
-            params.value === 'Pending' ? 'warning' :
-            params.value === 'Accepted' ? 'success' :
-            params.value === 'Rejected' ? 'error' : 'default'
-          }
-          size="small"
-        />
-      )
-    },
-    {
-      field: 'postedAt',
-      headerName: 'Applied On',
-      width: 180,
-      valueGetter: (params) => new Date(params.row.postedAt).toLocaleString()
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 120,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <Box>
-          <Tooltip title="View Application">
-            <IconButton
-              onClick={() => handleViewApplication(params.row._id)}
-              color="primary"
-              size="small"
-            >
-              <VisibilityIcon />
-            </IconButton>
-          </Tooltip>
-          {params.row.resume && (
-            <Tooltip title="Download Resume">
-              <IconButton
-                onClick={() => handleDownloadResume(params.row.resume)}
-                color="primary"
-                size="small"
-              >
-                <DownloadIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      ),
-    },
-  ];
 
   const fetchJobDetails = async () => {
     try {
@@ -171,40 +108,69 @@ const JobApplicationsList = () => {
         </Alert>
       )}
 
-      <Paper sx={{ height: 600, width: '100%' }}>
-        <DataGrid
-          rows={applications.map(app => ({ ...app, id: app._id }))}
-          columns={columns}
-          pagination
-          pageSize={pageSize}
-          rowCount={totalCount}
-          paginationMode="server"
-          sortingMode="server"
-          onPageChange={(newPage) => setPage(newPage)}
-          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
-          onSortModelChange={(newSortModel) => setSortModel(newSortModel)}
-          rowsPerPageOptions={[5, 10, 20, 50]}
-          components={{
-            Toolbar: GridToolbar,
-          }}
-          componentsProps={{
-            toolbar: {
-              showQuickFilter: true,
-              quickFilterProps: { debounceMs: 500 },
-            },
-          }}
-          loading={loading}
-          disableSelectionOnClick
-          sx={{
-            '& .MuiDataGrid-toolbarContainer': {
-              padding: 2,
-              backgroundColor: '#f5f5f5',
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f5f5f5',
-              fontWeight: 'bold',
-            },
-          }}
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <TableContainer>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell>Applicant Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Applied On</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {applications.map((application) => (
+                <TableRow key={application._id}>
+                  <TableCell>{application.userSnap?.name || application.applicant?.name || 'N/A'}</TableCell>
+                  <TableCell>{application.userSnap?.email || application.applicant?.email || 'N/A'}</TableCell>
+                  <TableCell>{application.userSnap?.mobile || application.userSnap?.phone || application.applicant?.phone || 'N/A'}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={application.status}
+                      color={
+                        application.status === 'Pending' ? 'warning' :
+                        application.status === 'Accepted' ? 'success' :
+                        application.status === 'Rejected' ? 'error' : 'default'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{new Date(application.postedAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Tooltip title="View Application">
+                      <IconButton onClick={() => handleViewApplication(application._id)} color="primary" size="small">
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                    {application.resume && (
+                      <Tooltip title="Download Resume">
+                        <IconButton onClick={() => handleDownloadResume(application.resume)} color="primary" size="small">
+                          <DownloadIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {applications.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">No applications found</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={pageSize}
+          page={page}
+          onPageChange={(event, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(event) => { setPageSize(parseInt(event.target.value, 10)); setPage(0); }}
         />
       </Paper>
     </Box>
