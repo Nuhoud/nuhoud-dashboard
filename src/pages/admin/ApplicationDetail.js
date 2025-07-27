@@ -42,14 +42,15 @@ import {
   CheckCircle as CheckCircleIcon,
   Interests as InterestsIcon,
   Flag as FlagIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
-import { getApplication, updateApplication } from '../../services/api';
+import { getApplication, updateApplicationStatus } from '../../services/api';
 
 const statusOptions = [
-  'Pending',
-  'Interviewing',
-  'Accepted',
-  'Rejected',
+  { value: 'قيد المراجعة', label: 'قيد المراجعة' },
+  { value: 'تمت المراجعة', label: 'تمت المراجعة' },
+  { value: 'مقبول', label: 'مقبول' },
+  { value: 'مرفوض', label: 'مرفوض' },
 ];
 
 const ApplicationDetail = () => {
@@ -61,7 +62,7 @@ const ApplicationDetail = () => {
   const [error, setError] = useState('');
 
   const [note, setNote] = useState('');
-  const [status, setStatus] = useState('Pending');
+  const [status, setStatus] = useState('قيد المراجعة');
   const [saving, setSaving] = useState(false);
 
   const fetchApplication = async () => {
@@ -71,7 +72,7 @@ const ApplicationDetail = () => {
       const app = res.data || res; // API may wrap in .data
       setApplication(app);
       setNote(app.employerNote || '');
-      setStatus(app.status || 'Pending');
+      setStatus(app.status || 'قيد المراجعة');
     } catch (err) {
       console.error('Error loading application', err);
       setError('Failed to load application');
@@ -88,10 +89,13 @@ const ApplicationDetail = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateApplication(id, { status, employerNote: note });
+      await updateApplicationStatus(id, { 
+        status,
+        employerNote: note 
+      });
       navigate(-1); // go back to list after save
     } catch (err) {
-      console.error('Error updating application', err);
+      console.error('Error updating application status', err);
       setError('Failed to save changes');
     } finally {
       setSaving(false);
@@ -414,6 +418,23 @@ const ApplicationDetail = () => {
           <CheckCircleIcon />,
           <Grid container spacing={2}>
             <Grid item xs={12}>
+              <FormControl fullWidth variant="outlined" margin="normal">
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  label="Status"
+                >
+                  {statusOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
               <TextField
                 label="Your Notes"
                 multiline
@@ -425,41 +446,30 @@ const ApplicationDetail = () => {
                 variant="outlined"
               />
             </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth>
-                <InputLabel>Application Status</InputLabel>
-                <Select
-                  label="Application Status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+            
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="space-between" mt={3}>
+                <Button 
+                  variant="outlined"
+                  onClick={() => navigate(-1)}
+                  startIcon={<ArrowBackIcon />}
                 >
-                  {statusOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={8} display="flex" justifyContent="flex-end" alignItems="center">
-              <Button 
-                variant="outlined" 
-                sx={{ mr: 2 }}
-                onClick={() => navigate(-1)}
-              >
-                Back to List
-              </Button>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleSave} 
-                disabled={saving}
-                startIcon={saving ? <CircularProgress size={20} /> : null}
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </Button>
+                  Back to List
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  startIcon={saving ? <CircularProgress size={20} /> : null}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         )}
-        </Grid>
+      </Grid>
     </Box>
   );
 };
