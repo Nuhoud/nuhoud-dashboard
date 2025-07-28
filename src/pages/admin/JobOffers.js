@@ -108,14 +108,19 @@ const JobOffers = () => {
       )
     },
     { 
-      field: 'employer', 
+      field: 'companyName', 
       headerName: 'Company', 
       flex: 1.5,
       minWidth: 150,
-      valueGetter: (params) => {
-        if (!params?.row) return 'N/A';
-        return params.row.employer?.company || 'N/A';
-      }
+
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          size="small"
+          color="primary"
+          variant="outlined"
+        />
+      )
     },
     { 
       field: 'jobLocation', 
@@ -170,7 +175,7 @@ const JobOffers = () => {
       headerName: 'Salary',
       flex: 1.5,
       minWidth: 150,
-      valueGetter: (params) => {
+      renderCell: (params) => {
         if (!params.value) return 'N/A';
         const { min, max, currency } = params.value;
         return min && max ? `${min} - ${max} ${currency}` : 'N/A';
@@ -202,9 +207,14 @@ const JobOffers = () => {
       headerName: 'Posted',
       flex: 1,
       minWidth: 120,
-      valueFormatter: (params) => {
-        return params.value ? new Date(params.value).toLocaleDateString() : 'N/A';
-      }
+      renderCell: (params) => (
+        <Chip
+          label={params.value ? new Date(params.value).toLocaleDateString() : 'N/A'}
+          size="small"
+          color="primary"
+          variant="outlined"
+        />
+      )
     },
     {
       field: 'actions',
