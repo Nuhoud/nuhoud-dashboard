@@ -499,4 +499,30 @@ export const getEmployerAnalytics = async () => {
   }
 };
 
+// Get admin analytics data (global or for specific employer)
+export const getAdminAnalytics = async (employerId = null) => {
+  try {
+    const params = employerId ? { employerId } : {};
+    const response = await apiJobs.get('/job-offers/analytics', { 
+      params,
+      headers: getAuthHeaders()
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin analytics:', error);
+    return {
+      totalJobs: 0,
+      activeJobs: 0,
+      totalApplications: 0,
+      totalEmployers: 0,
+      totalCandidates: 0,
+      averageSalary: { min: 0, max: 0 },
+      topSkills: [],
+      jobTypeDistribution: [],
+      workPlaceTypeDistribution: [],
+      applicationsByStatus: []
+    };
+  }
+};
+
 export default apiMain;

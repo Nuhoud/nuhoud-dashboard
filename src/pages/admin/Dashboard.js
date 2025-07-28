@@ -1,362 +1,500 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, Paper, Avatar, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Alert } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
-import { getJobOffersAnalytics, getApplications } from '../../services/api';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  List,
+  ListItem ,
+  ListItemAvatar ,
+  ListItemText ,
+  Chip ,
+  Avatar,
+  CircularProgress,
+  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Card,
+  CardContent,
+  CardHeader
+} from '@mui/material';
+import {
+  Work as WorkIcon,
+  People as PeopleIcon,
+  TrendingUp as TrendingUpIcon,
+  AttachMoney as MoneyIcon,
+  Category as CategoryIcon,
+  LocationOn as LocationIcon,
+  BarChart as BarChartIcon,
+  Schedule as ScheduleIcon,
+  Edit as DraftIcon,
+  Lock as LockIcon,
+  Help as HelpIcon
+} from '@mui/icons-material';
+import { getEmployerAnalytics } from '../../services/api';
 
-// Icons for metric cards
-import WorkIcon from '@mui/icons-material/Work';
-import PeopleIcon from '@mui/icons-material/People';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import BusinessIcon from '@mui/icons-material/Business';
-
-// Dummy data for testing
-const DUMMY_DATA = {
-  totalJobs: 15,
-  activeJobs: 15,
-  totalApplications: 7,
-  totalHired: 1,
-  applicationsByStatus: [
-    { name: 'Pending', value: 145 },
-    { name: 'Reviewed', value: 98 },
-    { name: 'Interviewing', value: 76 },
-    { name: 'Hired', value: 67 },
-    { name: 'Rejected', value: 46 }
-  ],
-  applicationsByJob: [
-    { title: 'Senior Developer', applications: 1 },
-    { title: 'UI/UX Designer', applications: 1 },
-    { title: 'Project Manager', applications: 1 },
-    { title: 'DevOps Engineer', applications: 1 },
-    { title: 'Data Scientist', applications: 1 },
-    { title: 'Frontend Developer', applications: 1 }
-  ],
-  recentApplications: [
-    {
-      id: 1,
-      applicantName: 'John Smith',
-      jobTitle: 'Senior Developer',
-      status: 'Pending',
-      appliedDate: '2024-03-15'
-    },
-    {
-      id: 2,
-      applicantName: 'Sarah Johnson',
-      jobTitle: 'UI/UX Designer',
-      status: 'Interviewing',
-      appliedDate: '2024-03-14'
-    },
-    {
-      id: 3,
-      applicantName: 'Michael Brown',
-      jobTitle: 'Project Manager',
-      status: 'Reviewed',
-      appliedDate: '2024-03-13'
-    },
-    {
-      id: 4,
-      applicantName: 'Emily Davis',
-      jobTitle: 'DevOps Engineer',
-      status: 'Hired',
-      appliedDate: '2024-03-12'
-    },
-    {
-      id: 5,
-      applicantName: 'David Wilson',
-      jobTitle: 'Data Scientist',
-      status: 'Rejected',
-      appliedDate: '2024-03-11'
-    }
-  ]
+// Helper functions for job status
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return '#36b37e';
+    case 'draft':
+      return '#ffab00';
+    case 'closed':
+      return '#ff5630';
+    case 'expired':
+      return '#666';
+    default:
+      return '#9e9e9e';
+  }
 };
 
-// --- Reusable Metric Card Component ---
-const MetricCard = ({ title, value, icon, color }) => (
-  <Paper
-    sx={{
-      p: 3,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderRadius: 4,
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-      transition: 'transform 0.3s ease-in-out',
-      '&:hover': {
-        transform: 'translateY(-5px)',
-      },
-    }}
-  >
-    <Box>
-      <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>{title}</Typography>
-      <Typography variant="h4" fontWeight={600} sx={{ color: '#667eea' }}>{value}</Typography>
-    </Box>
-    <Avatar sx={{ bgcolor: color, color: '#fff', width: 56, height: 56, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-      {icon}
-    </Avatar>
-  </Paper>
-);
-
-// --- Custom Active Shape for Pie Chart ---
-const renderActiveShape = (props) => {
-    const RADIAN = Math.PI / 180;
-    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-    const sin = Math.sin(-RADIAN * midAngle);
-    const cos = Math.cos(-RADIAN * midAngle);
-    const sx = cx + (outerRadius + 10) * cos;
-    const sy = cy + (outerRadius + 10) * sin;
-    const mx = cx + (outerRadius + 30) * cos;
-    const my = cy + (outerRadius + 30) * sin;
-    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
-    const ey = my;
-    const textAnchor = cos >= 0 ? 'start' : 'end';
-
-    return (
-        <g>
-            <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
-                {payload.name}
-            </text>
-            <Sector
-                cx={cx}
-                cy={cy}
-                innerRadius={innerRadius}
-                outerRadius={outerRadius}
-                startAngle={startAngle}
-                endAngle={endAngle}
-                fill={fill}
-            />
-            <Sector
-                cx={cx}
-                cy={cy}
-                startAngle={startAngle}
-                endAngle={endAngle}
-                innerRadius={outerRadius + 6}
-                outerRadius={outerRadius + 10}
-                fill={fill}
-            />
-            <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
-            <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`${value} Apps`}</text>
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
-                {`(Rate ${(percent * 100).toFixed(2)}%)`}
-            </text>
-        </g>
-    );
+const getStatusIcon = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return <TrendingUpIcon />;
+    case 'draft':
+      return <DraftIcon />;
+    case 'closed':
+      return <LockIcon />;
+    case 'expired':
+      return <ScheduleIcon />;
+    default:
+      return <HelpIcon />;
+  }
 };
 
-const StatusChip = ({ status }) => {
-    const statusMap = {
-        Pending: { color: 'warning', label: 'Pending' },
-        Reviewed: { color: 'info', label: 'Reviewed' },
-        Interviewing: { color: 'primary', label: 'Interviewing' },
-        Hired: { color: 'success', label: 'Hired' },
-        Rejected: { color: 'error', label: 'Rejected' }
-    };
-    const chipProps = statusMap[status] || { color: 'default', label: status };
-    return <Chip label={chipProps.label} color={chipProps.color} size="small" />;
+// Initial state for analytics
+const initialAnalytics = {
+  totalJobs: 0,
+  activeJobs: 0,
+  totalApplications: 0,
+  averageSalary: { min: 0, max: 0 },
+  topSkills: [],
+  jobTypeDistribution: [],
+  workPlaceTypeDistribution: []
 };
 
 const Dashboard = () => {
-  const [analytics, setAnalytics] = useState(DUMMY_DATA);
-  const [recentApplications, setRecentApplications] = useState(DUMMY_DATA.recentApplications);
-  const [pieActiveIndex, setPieActiveIndex] = useState(0);
-  const [userRole, setUserRole] = useState('admin');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [analytics, setAnalytics] = useState(initialAnalytics);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const role = localStorage.getItem('userRole') || 'admin';
-    setUserRole(role);
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const data = await getEmployerAnalytics();
+        setAnalytics(data);
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
   }, []);
+
+  // Extract data for easier access
+  const { 
+    totalJobs, 
+    activeJobs, 
+    totalApplications, 
+    averageSalary, 
+    topSkills, 
+    jobTypeDistribution, 
+    workPlaceTypeDistribution 
+  } = analytics;
+
+  const responseRate = totalJobs > 0 ? Math.round((totalApplications / totalJobs) * 100) : 0;
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress size={60} />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '80vh' 
+      }}>
+        <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <Alert severity="error">{error}</Alert>
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography color="error">{error}</Typography>
       </Box>
     );
   }
 
-  const onPieEnter = (_, index) => {
-    setPieActiveIndex(index);
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
-
-  const PIE_COLORS = ['#667eea', '#764ba2', '#f7b924', '#36b37e', '#ff5630'];
-
-  // Dynamic header content based on user role
-  const getHeaderContent = () => {
-    if (userRole === 'employer') {
-      return {
-        title: 'Employer Dashboard',
-        subtitle: 'Welcome back! Here\'s an overview of your job postings and applications',
-        icon: <BusinessIcon sx={{ fontSize: 28, color: 'white' }} />
-      };
-    }
-    return {
-      title: 'Admin Dashboard',
-      subtitle: 'Welcome back! Here\'s an overview of your platform\'s performance',
-      icon: <DashboardIcon sx={{ fontSize: 28, color: 'white' }} />
-    };
-  };
-
-  const headerContent = getHeaderContent();
 
   return (
     <Box>
-      {/* Enhanced Dashboard Header */}
-      <Box sx={{ 
-        mb: 4, 
-        p: 3, 
-        borderRadius: 4, 
-        background: 'linear-gradient(135deg, rgba(33, 33, 33, 0.95), rgba(66, 66, 66, 0.95))',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
-      }}>
-        <Avatar sx={{ 
-          bgcolor: 'linear-gradient(135deg, #424242, #212121)',
-          background: 'linear-gradient(135deg, #424242, #212121)',
-          width: 56, 
-          height: 56,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
-        }}>
-          {headerContent.icon}
-        </Avatar>
-        <Box>
-          <Typography variant="h3" fontWeight={800} sx={{ 
-            background: 'linear-gradient(135deg, #ffffff, #e0e0e0)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 0.5
-          }}>
-            {headerContent.title}
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#bdbdbd', fontWeight: 500 }}>
-            {headerContent.subtitle}
-          </Typography>
-        </Box>
-      </Box>
-      
-      {/* --- Metric Cards --- */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#667eea', mb: 3 }}>
+        Admin Dashboard
+      </Typography>
+
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard title="Total Jobs" value={analytics.totalJobs} icon={<WorkIcon />} color="#667eea" />
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: 'white',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': { transform: 'translateY(-5px)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+                  Total Jobs
+                </Typography>
+                <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
+                  {totalJobs}
+                </Typography>
+              </Box>
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <WorkIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+            </Box>
+          </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard title="Total Applications" value={analytics.totalApplications} icon={<PeopleIcon />} color="#764ba2" />
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #36b37e, #00a854)',
+              color: 'white',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': { transform: 'translateY(-5px)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+                  Active Jobs
+                </Typography>
+                <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
+                  {activeJobs}
+                </Typography>
+              </Box>
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <TrendingUpIcon sx={{ fontSize: 32 }} />
+              </Avatar>
+            </Box>
+          </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard title="Total Hired" value={analytics.totalHired} icon={<CheckCircleIcon />} color="#36b37e" />
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #ff9a9e, #fad0c4)',
+              color: '#333',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': { transform: 'translateY(-5px)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
+                  Total Applications
+                </Typography>
+                <Typography variant="h3" fontWeight={700}>
+                  {totalApplications}
+                </Typography>
+              </Box>
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.5)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <PeopleIcon sx={{ fontSize: 32, color: '#333' }} />
+              </Avatar>
+            </Box>
+          </Paper>
         </Grid>
+
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard title="Active Jobs" value={analytics.activeJobs} icon={<HourglassTopIcon />} color="#ff5630" />
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #a18cd1, #fbc2eb)',
+              color: '#333',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': { transform: 'translateY(-5px)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
+                  Response Rate
+                </Typography>
+                <Typography variant="h3" fontWeight={700}>
+                  {responseRate}%
+                </Typography>
+              </Box>
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.5)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <BarChartIcon sx={{ fontSize: 32, color: '#333' }} />
+              </Avatar>
+            </Box>
+          </Paper>
         </Grid>
       </Grid>
 
-      {/* --- Charts --- */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, borderRadius: 4, height: 400, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-            <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600 }}>
-              Applications per Job
-            </Typography>
-            <ResponsiveContainer width="100%" height="90%">
-              <BarChart data={analytics.applicationsByJob} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="title" fontSize={12} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="applications" fill="#667eea" />
-              </BarChart>
-            </ResponsiveContainer>
+      {/* Analytics Sections */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Salary Range Card */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <MoneyIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Average Salary Range
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                Average salary across all job postings
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                  {formatCurrency(averageSalary.min)}
+                </Typography>
+                <Box sx={{ mx: 2, color: 'text.secondary' }}>to</Box>
+                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                  {formatCurrency(averageSalary.max)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                  SAR / year
+                </Typography>
+              </Box>
+              <Box sx={{ mt: 2, width: '100%', height: 8, bgcolor: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+                <Box 
+                  sx={{ 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, #36b37e, #667eea)',
+                    borderRadius: 4,
+                    width: '100%'
+                  }} 
+                />
+              </Box>
+            </Box>
           </Paper>
         </Grid>
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, borderRadius: 4, height: 400, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-            <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600 }}>
-              Application Status Distribution
-            </Typography>
-             <ResponsiveContainer width="100%" height="90%">
-              <PieChart>
-                <Pie
-                  activeIndex={pieActiveIndex}
-                  activeShape={renderActiveShape}
-                  data={analytics.applicationsByStatus}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  onMouseEnter={onPieEnter}
-                >
-                  {analytics.applicationsByStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+        
+        {/* Top Skills Card */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <CategoryIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Top In-Demand Skills
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {topSkills.length > 0 ? (
+                <Grid container spacing={1}>
+                  {topSkills.map((skill, index) => (
+                    <Grid item key={index}>
+                      <Box 
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          borderRadius: 4,
+                          bgcolor: index % 2 === 0 ? '#f0f4ff' : '#f0fff4',
+                          color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                          fontWeight: 500,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        <span>{skill.skill}</span>
+                        <Box 
+                          component="span" 
+                          sx={{
+                            ml: 1,
+                            bgcolor: index % 2 === 0 ? '#e3e6ff' : '#d4edda',
+                            color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 4,
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {skill.count}
+                        </Box>
+                      </Box>
+                    </Grid>
                   ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No skill data available
+                </Typography>
+              )}
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* --- Recent Applications Table --- */}
-      <Paper sx={{ mt: 3, p: 3, borderRadius: 4, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600 }}>
-          Recent Applications
+      {/* Distribution Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Job Type Distribution */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <WorkIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Job Type Distribution
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {jobTypeDistribution.length > 0 ? (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Job Type</TableCell>
+                        <TableCell align="right">Count</TableCell>
+                        <TableCell align="right">Percentage</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {jobTypeDistribution.map((jobType, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{jobType.type}</TableCell>
+                          <TableCell align="right">{jobType.count}</TableCell>
+                          <TableCell align="right">
+                            {Math.round((jobType.count / totalJobs) * 100) || 0}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No job type data available
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Workplace Type Distribution */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LocationIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Workplace Type Distribution
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {workPlaceTypeDistribution.length > 0 ? (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Workplace Type</TableCell>
+                        <TableCell align="right">Count</TableCell>
+                        <TableCell align="right">Percentage</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {workPlaceTypeDistribution.map((workplace, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{workplace.type}</TableCell>
+                          <TableCell align="right">{workplace.count}</TableCell>
+                          <TableCell align="right">
+                            {Math.round((workplace.count / totalJobs) * 100) || 0}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No workplace type data available
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Placeholder for Future Implementation */}
+      <Paper
+        sx={{
+          p: 4,
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          mb: 4
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600, mb: 2 }}>
+          More Analytics Coming Soon
         </Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: 'rgba(102, 126, 234, 0.08)' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Applicant</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Job Title</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Applied Date</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {recentApplications.map((application) => (
-                <TableRow key={application.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: '#667eea' }}>
-                        {application.applicantName?.charAt(0) || 'A'}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight={500}>
-                        {application.applicantName || 'Unknown Applicant'}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{application.jobTitle || 'Unknown Job'}</TableCell>
-                  <TableCell>
-                    <StatusChip status={application.status} />
-                  </TableCell>
-                  <TableCell>
-                    {application.appliedDate ? new Date(application.appliedDate).toLocaleDateString() : 'N/A'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Typography color="text.secondary">
+          We're working on adding more detailed analytics and insights to help you track your job postings and applications.
+        </Typography>
       </Paper>
     </Box>
   );
 };
 
-export default Dashboard;
+export default Dashboard; 
