@@ -193,8 +193,12 @@ export const profileStepTwo = async (data) => {
 };
 
 // --- Job Offers & Applications API (Port 4000) ---
-export const getJobOffers = async (filters = {}) => {
-  const response = await apiJobs.get('/job-offers', { params: filters, headers: getAuthHeaders() });
+export const getJobOffers = async (params = {}, endpoint = '') => {
+  const url = `/job-offers${endpoint ? `/${endpoint}` : ''}`;
+  const response = await apiJobs.get(url, { 
+    params, 
+    headers: getAuthHeaders() 
+  });
   return response.data;
 };
 

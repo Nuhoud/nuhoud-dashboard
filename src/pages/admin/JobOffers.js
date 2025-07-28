@@ -1,37 +1,106 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert, CircularProgress, MenuItem, Chip, InputLabel, Select, FormControl, OutlinedInput, Paper, IconButton, Tooltip } from '@mui/material';
+import React, { useEffect, useState, useCallback } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  Snackbar, 
+  Alert, 
+  CircularProgress, 
+  Chip, 
+  Paper, 
+  IconButton, 
+  Tooltip, 
+  TextField, 
+  Grid, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  InputAdornment
+} from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { getJobOffers, createJobOffer, deleteJobOffer } from '../../services/api';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { getJobOffers } from '../../services/api';
+import SearchIcon from '@mui/icons-material/Search';
 import PeopleIcon from '@mui/icons-material/People';
 import { useNavigate } from 'react-router-dom';
 
-const skillsList = [
-  'JavaScript', 'TypeScript', 'React', 'Node.js', 'MongoDB', 'Python', 'Django', 'SQL', 'AWS', 'Docker', 'Other'
+const experienceLevels = [
+  'Entry Level', 
+  'Intership', 
+  'Mid Level', 
+  'Senior Level', 
+  'Associate', 
+  'Director', 
+  'Executive'
 ];
-const experienceLevels = ['Entry Level', 'Intership', 'Mid Level', 'Senior Level', 'Associate', 'Director', 'Executive'];
-const workPlaceTypes = ['Onsite', 'Remote', 'مزيج'];
-const jobTypes = ['دوام كامل', 'دوام جزئي', 'عقد', 'مستقل', 'تدريب'];
+
+const workPlaceTypes = ['عن بعد', 'في الشركة', 'مزيج'];
+
+const jobTypes = [
+  'دوام كامل', 
+  'دوام جزئي', 
+  'عقد', 
+  'مستقل', 
+  'تدريب'
+];
+
+const statusOptions = [
+  'مفتوح',
+  'مغلق',
+  'منتهي الصلاحية',
+  'مسودة'
+];
+
+const currencyOptions = ['USD', 'EUR', 'SYP'];
+
+// Default pagination
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
 
 const JobOffers = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openAdd, setOpenAdd] = useState(false);
-  const [newJob, setNewJob] = useState({
-    title: '', experienceLevel: '', workPlaceType: '', jobType: '', jobLocation: '', description: '', requirements: [], skillsRequired: [], salaryRange: { min: '', max: '', currency: 'SYP' }, deadline: '', status: 'مفتوح',
+  const [totalCount, setTotalCount] = useState(0);
+  const [paginationModel, setPaginationModel] = useState({
+    page: DEFAULT_PAGE - 1, // MUI DataGrid is 0-indexed
+    pageSize: DEFAULT_PAGE_SIZE,
   });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [deleteId, setDeleteId] = useState(null);
+  const [sortModel, setSortModel] = useState([
+    { field: 'postedAt', sort: 'desc' },
+  ]);
+  
+  // Filters state
+  const [filters, setFilters] = useState({
+    workPlaceType: '',
+    jobType: '',
+    jobLocation: '',
+    companyName: '',
+    experienceLevel: '',
+    status: '',
+    salaryMin: '',
+    salaryMax: '',
+    currency: 'SYP',
+    q: '' // Search term
+  });
+  
+  const [snackbar, setSnackbar] = useState({ 
+    open: false, 
+    message: '', 
+    severity: 'success' 
+  });
   const [error, setError] = useState('');
 
   const columns = [
     { 
       field: 'title', 
       headerName: 'Job Title', 
-      width: 250,
+      flex: 2,
+      minWidth: 200,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {params.value}
@@ -39,9 +108,10 @@ const JobOffers = () => {
       )
     },
     { 
-      field: 'company', 
+      field: 'employer', 
       headerName: 'Company', 
-      width: 200,
+      flex: 1.5,
+      minWidth: 150,
       valueGetter: (params) => {
         if (!params?.row) return 'N/A';
         return params.row.employer?.company || 'N/A';
@@ -49,13 +119,15 @@ const JobOffers = () => {
     },
     { 
       field: 'jobLocation', 
-      headerName: 'Location', 
-      width: 150 
+      headerName: 'Location',
+      flex: 1,
+      minWidth: 120
     },
     { 
       field: 'jobType', 
       headerName: 'Type', 
-      width: 130,
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => (
         <Chip
           label={params.value}
@@ -68,7 +140,8 @@ const JobOffers = () => {
     { 
       field: 'experienceLevel', 
       headerName: 'Experience', 
-      width: 130,
+      flex: 1,
+      minWidth: 140,
       renderCell: (params) => (
         <Chip
           label={params.value}
@@ -81,7 +154,8 @@ const JobOffers = () => {
     { 
       field: 'workPlaceType', 
       headerName: 'Workplace', 
-      width: 130,
+      flex: 1,
+      minWidth: 120,
       renderCell: (params) => (
         <Chip
           label={params.value}
@@ -92,22 +166,51 @@ const JobOffers = () => {
       )
     },
     {
+      field: 'salaryRange',
+      headerName: 'Salary',
+      flex: 1.5,
+      minWidth: 150,
+      valueGetter: (params) => {
+        if (!params.value) return 'N/A';
+        const { min, max, currency } = params.value;
+        return min && max ? `${min} - ${max} ${currency}` : 'N/A';
+      }
+    },
+    {
       field: 'status',
       headerName: 'Status',
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value === 'Active' ? 'success' : 'error'}
-          size="small"
-        />
-      ),
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => {
+        const statusColors = {
+          'مفتوح': 'success',
+          'مغلق': 'error',
+          'منتهي الصلاحية': 'warning',
+          'مسودة': 'default'
+        };
+        return (
+          <Chip
+            label={params.value}
+            color={statusColors[params.value] || 'default'}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      field: 'postedAt',
+      headerName: 'Posted',
+      flex: 1,
+      minWidth: 120,
+      valueFormatter: (params) => {
+        return params.value ? new Date(params.value).toLocaleDateString() : 'N/A';
+      }
     },
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 100,
       sortable: false,
+      width: 100,
       renderCell: (params) => (
         <Box>
           <Tooltip title="View Applications">
@@ -124,58 +227,105 @@ const JobOffers = () => {
     },
   ];
 
-  const fetchJobs = async () => {
+  const buildQueryParams = useCallback(() => {
+    const params = {
+      page: paginationModel.page + 1, // Convert to 1-based for backend
+      limit: paginationModel.pageSize,
+    };
+
+    // Add sorting
+    if (sortModel.length > 0) {
+      const { field, sort } = sortModel[0];
+      params.sortBy = field;
+      params.sortOrder = sort;
+    }
+
+    // Add filters (only include non-empty values)
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        // Handle special cases for salary range
+        if (key === 'salaryMin' && value !== '') {
+          params[`salaryRange.min`] = value;
+        } else if (key === 'salaryMax' && value !== '') {
+          params[`salaryRange.max`] = value;
+        } else if (key === 'currency' && value) {
+          params[`salaryRange.currency`] = value;
+        } else if (value !== '') {
+          params[key] = value;
+        }
+      }
+    });
+
+    return params;
+  }, [paginationModel, sortModel, filters]);
+
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await getJobOffers();
+      const params = buildQueryParams();
+      
+      // Use search endpoint if there's a search term, otherwise use regular endpoint
+      const endpoint = params.q ? 'search' : '';
+      const response = await getJobOffers(params, endpoint);
+      
       setJobs(response.data || []);
+      setTotalCount(response.total || 0);
     } catch (err) {
       console.error('Error fetching jobs:', err);
       setError('Failed to load job offers. Please try again.');
+      setSnackbar({
+        open: true,
+        message: 'Failed to load job offers',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildQueryParams]);
 
+  // Fetch jobs when filters, pagination, or sorting changes
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [fetchJobs]);
 
-  const handleAddJob = async () => {
-    try {
-      const jobToSend = {
-        ...newJob,
-        requirements: newJob.requirements.filter(r => r.trim() !== ''),
-        salaryRange: {
-          min: Number(newJob.salaryRange.min) || 0,
-          max: Number(newJob.salaryRange.max) || 0,
-          currency: newJob.salaryRange.currency || 'SYP',
-        },
-      };
-      await createJobOffer(jobToSend);
-      setSnackbar({ open: true, message: 'Job created!', severity: 'success' });
-      setOpenAdd(false);
-      setNewJob({
-        title: '', experienceLevel: '', workPlaceType: '', jobType: '', jobLocation: '', description: '', requirements: [], skillsRequired: [], salaryRange: { min: '', max: '', currency: 'SYP' }, deadline: '', status: 'مفتوح',
-      });
-      fetchJobs();
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to create job');
-    }
+  const handleFilterChange = (field) => (event) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }));
   };
 
-  const handleDeleteJob = async () => {
-    try {
-      await deleteJobOffer(deleteId);
-      setSnackbar({ open: true, message: 'Job deleted!', severity: 'success' });
-      setDeleteId(null);
-      fetchJobs();
-    } catch {
-      setSnackbar({ open: true, message: 'Failed to delete job', severity: 'error' });
-    }
+  const handleSearchChange = (event) => {
+    setFilters(prev => ({
+      ...prev,
+      q: event.target.value
+    }));
   };
 
-  function renderErrorMessages(error) {
+  const handleResetFilters = () => {
+    setFilters({
+      workPlaceType: '',
+      jobType: '',
+      jobLocation: '',
+      companyName: '',
+      experienceLevel: '',
+      status: '',
+      salaryMin: '',
+      salaryMax: '',
+      currency: 'SYP',
+      q: ''
+    });
+  };
+
+  const handlePaginationModelChange = (newPaginationModel) => {
+    setPaginationModel(newPaginationModel);
+  };
+
+  const handleSortModelChange = (newSortModel) => {
+    setSortModel(newSortModel);
+  };
+
+  const renderErrorMessages = (error) => {
     if (!error) return null;
     if (typeof error === 'string') return error;
     if (Array.isArray(error)) {
@@ -195,9 +345,191 @@ const JobOffers = () => {
       );
     }
     return String(error);
-  }
+  };
 
-  if (loading) {
+  const renderFilters = () => (
+    <Card sx={{ mb: 3 }}>
+      <CardHeader 
+        title="Filters" 
+        action={
+          <Button 
+            onClick={handleResetFilters}
+            variant="outlined"
+            color="secondary"
+            size="small"
+          >
+            Reset Filters
+          </Button>
+        }
+      />
+      <Divider />
+      <CardContent>
+        <Grid container spacing={2}>
+          {/* Search */}
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              label="Search"
+              value={filters.q}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder="Search job titles, companies..."
+            />
+          </Grid>
+          
+          {/* Work Place Type */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Work Place</InputLabel>
+              <Select
+                value={filters.workPlaceType}
+                onChange={handleFilterChange('workPlaceType')}
+                label="Work Place"
+              >
+                <MenuItem value="">All</MenuItem>
+                {workPlaceTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {/* Job Type */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Job Type</InputLabel>
+              <Select
+                value={filters.jobType}
+                onChange={handleFilterChange('jobType')}
+                label="Job Type"
+              >
+                <MenuItem value="">All</MenuItem>
+                {jobTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {/* Experience Level */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Experience</InputLabel>
+              <Select
+                value={filters.experienceLevel}
+                onChange={handleFilterChange('experienceLevel')}
+                label="Experience"
+              >
+                <MenuItem value="">All</MenuItem>
+                {experienceLevels.map((level) => (
+                  <MenuItem key={level} value={level}>
+                    {level}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {/* Status */}
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={filters.status}
+                onChange={handleFilterChange('status')}
+                label="Status"
+              >
+                <MenuItem value="">All</MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {/* Salary Range */}
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth>
+              <InputLabel>Currency</InputLabel>
+              <Select
+                value={filters.currency}
+                onChange={handleFilterChange('currency')}
+                label="Currency"
+              >
+                {currencyOptions.map((currency) => (
+                  <MenuItem key={currency} value={currency}>
+                    {currency}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={4.5} md={2}>
+            <TextField
+              fullWidth
+              label="Min Salary"
+              type="number"
+              value={filters.salaryMin}
+              onChange={handleFilterChange('salaryMin')}
+              InputProps={{
+                inputProps: { min: 0 }
+              }}
+            />
+          </Grid>
+          
+          <Grid item xs={12} sm={4.5} md={2}>
+            <TextField
+              fullWidth
+              label="Max Salary"
+              type="number"
+              value={filters.salaryMax}
+              onChange={handleFilterChange('salaryMax')}
+              InputProps={{
+                inputProps: { min: 0 }
+              }}
+            />
+          </Grid>
+          
+          {/* Location */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              label="Location"
+              value={filters.jobLocation}
+              onChange={handleFilterChange('jobLocation')}
+              placeholder="City or country"
+            />
+          </Grid>
+          
+          {/* Company Name */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              label="Company"
+              value={filters.companyName}
+              onChange={handleFilterChange('companyName')}
+              placeholder="Company name"
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+
+  if (loading && jobs.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -207,9 +539,11 @@ const JobOffers = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
-        Job Offers
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" sx={{ color: '#1976d2', fontWeight: 600 }}>
+          Job Offers
+        </Typography>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -217,32 +551,43 @@ const JobOffers = () => {
         </Alert>
       )}
 
+      {renderFilters()}
+
       <Paper sx={{ height: 600, width: '100%' }}>
         <DataGrid
-          rows={jobs.map(job => ({ ...job, id: job._id }))}
+          rows={jobs}
           columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
+          loading={loading}
+          rowCount={totalCount}
+          pageSizeOptions={[10, 25, 50]}
+          pagination
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}
+          sortingMode="server"
+          sortModel={sortModel}
+          onSortModelChange={handleSortModelChange}
+          disableRowSelectionOnClick
           components={{
             Toolbar: GridToolbar,
           }}
           componentsProps={{
             toolbar: {
-              showQuickFilter: true,
-              quickFilterProps: { debounceMs: 500 },
+              showQuickFilter: false,
             },
           }}
-          disableSelectionOnClick
           sx={{
             '& .MuiDataGrid-toolbarContainer': {
               padding: 2,
-              backgroundColor: '#f5f5f5',
+              backgroundColor: 'transparent',
+              borderBottom: '1px solid rgba(224, 224, 224, 1)'
             },
             '& .MuiDataGrid-columnHeaders': {
               backgroundColor: '#f5f5f5',
               fontWeight: 'bold',
             },
           }}
+          getRowId={(row) => row._id}
         />
       </Paper>
     </Box>
