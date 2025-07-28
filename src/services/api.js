@@ -390,27 +390,26 @@ const renderErrorMessages = (errorObj) => {
 };
 
 /**
- * Get employer job statistics (dummy data for testing)
+ * Get employer job statistics
  */
 export const getEmployerJobStatistics = async () => {
-  // Return dummy data for testing
-  return {
-    data: {
-      totalJobs: 12,
-      activeJobs: 7,
-      closedJobs: 5,
-      totalApplications: 120,
-      pendingApplications: 15,
-      acceptedApplications: 80,
-      rejectedApplications: 25,
-      topJob: {
-        title: 'Senior Developer',
-        applications: 40
-      }
-    }
-  };
-  // To use real API, uncomment below:
-  // return apiJobs.get('/job-offers/statistics/employer', { headers: getAuthHeaders() });
+  try {
+    const response = await apiJobs.get('/job-offers/statistics/employer', { 
+      headers: getAuthHeaders() 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching employer statistics:', error);
+    // Return zeros if there's an error
+    return {
+      total: 0,
+      active: 0,
+      closed: 0,
+      expired: 0,
+      draft: 0,
+      totalApplications: 0
+    };
+  }
 };
 
 export const getJobApplications = async (jobId, params = {}) => {

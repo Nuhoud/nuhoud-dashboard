@@ -70,10 +70,16 @@ const Login = () => {
       const decoded = jwtDecode(response.token);
       
       if (decoded.role === selectedRole) {
+        // Save user data to localStorage
         localStorage.setItem('token', response.token);
         localStorage.setItem('userRole', decoded.role);
         localStorage.setItem('userName', decoded.name || '');
         localStorage.setItem('userId', decoded._id || '');
+        
+        // Determine and save email
+        const userEmail = decoded.email || (identifier.includes('@') ? identifier : '');
+        console.log('Saving email to localStorage:', userEmail);
+        localStorage.setItem('userEmail', userEmail);
         
         if (decoded.role === 'admin') {
           navigate('/admin/dashboard');

@@ -30,7 +30,7 @@ import {
   Business as BusinessIcon,
   LocationOn as LocationIcon
 } from '@mui/icons-material';
-import { getUserProfile, updateUserProfile, getMyProfile } from '../services/api';
+import { getUserProfile, updateUserProfile, getMyProfile, getEmployerJobStatistics } from '../services/api';
 
 const Profile = () => {
   const [formData, setFormData] = useState({
@@ -49,6 +49,12 @@ const Profile = () => {
     location: '',
     website: '',
     description: '',
+    totalJobs: 0,
+    activeJobs: 0,
+    closedJobs: 0,
+    expiredJobs: 0,
+    draftJobs: 0,
+    totalApplications: 0
   });
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
@@ -63,9 +69,14 @@ const Profile = () => {
   const fetchUserProfile = async () => {
     try {
       setFetchingProfile(true);
-      const userData = await getMyProfile();
+      const [userData, stats] = await Promise.all([
+        getMyProfile(),
+        getEmployerJobStatistics()
+      ]);
+      
       setUserRole(userData.role);
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: userData.name || '',
         email: userData.email || '',
         mobile: userData.mobile || '',
@@ -81,7 +92,13 @@ const Profile = () => {
         location: userData.location || '',
         website: userData.website || '',
         description: userData.description || '',
-      });
+        totalJobs: stats.total || 0,
+        activeJobs: stats.active || 0,
+        closedJobs: stats.closed || 0,
+        expiredJobs: stats.expired || 0,
+        draftJobs: stats.draft || 0,
+        totalApplications: stats.totalApplications || 0
+      }));
     } catch (err) {
       console.error('Error fetching profile:', err);
       setError('Failed to load profile data. Please refresh the page.');
@@ -383,7 +400,7 @@ const Profile = () => {
           </Paper>
         </Grid>
 
-        {/* Account Stats */}
+        {/* Job Statistics */}
         <Grid item xs={12} lg={4}>
           <Paper
             sx={{
@@ -396,17 +413,17 @@ const Profile = () => {
             }}
           >
             <Typography variant="h6" fontWeight={600} sx={{ color: '#667eea', mb: 3 }}>
-              Account Statistics
+              Job Statistics
             </Typography>
             
             <Box sx={{ space: 2 }}>
               <Card sx={{ mb: 2, background: 'rgba(102, 126, 234, 0.05)', border: '1px solid rgba(102, 126, 234, 0.1)' }}>
                 <CardContent sx={{ py: 2 }}>
                   <Typography variant="h4" fontWeight={700} sx={{ color: '#667eea' }}>
-                    {formData.jobsCount || 0}
+                    {formData.totalJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Jobs Posted
+                    Total Jobs Posted
                   </Typography>
                 </CardContent>
               </Card>
@@ -414,21 +431,43 @@ const Profile = () => {
               <Card sx={{ mb: 2, background: 'rgba(118, 75, 162, 0.05)', border: '1px solid rgba(118, 75, 162, 0.1)' }}>
                 <CardContent sx={{ py: 2 }}>
                   <Typography variant="h4" fontWeight={700} sx={{ color: '#764ba2' }}>
-                    {formData.applicationsCount || 0}
+                    {formData.activeJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Applications Received
+                    Active Jobs
                   </Typography>
                 </CardContent>
               </Card>
 
-              <Card sx={{ background: 'rgba(54, 179, 126, 0.05)', border: '1px solid rgba(54, 179, 126, 0.1)' }}>
+              <Card sx={{ mb: 2, background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#36b37e' }}>
-                    {formData.hiredCount || 0}
+                  <Typography variant="h4" fontWeight={700} sx={{ color: '#ef4444' }}>
+                    {formData.closedJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Successful Hires
+                    Closed Jobs
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Card sx={{ mb: 2, background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+                <CardContent sx={{ py: 2 }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: '#f59e0b' }}>
+                    {formData.expiredJobs}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Expired Jobs
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Card sx={{ mb: 2, background: 'rgba(54, 179, 126, 0.05)', border: '1px solid rgba(54, 179, 126, 0.1)' }}>
+                <CardContent sx={{ py: 2 }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: '#36b37e' }}>
+                    {formData.totalApplications}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Applications
                   </Typography>
                 </CardContent>
               </Card>
