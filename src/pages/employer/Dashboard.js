@@ -4,152 +4,146 @@ import {
   Typography,
   Grid,
   Paper,
-  Avatar,
-  Chip,
-  LinearProgress,
   List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider
+  ListItem ,
+  ListItemAvatar ,
+  ListItemText ,
+  Chip ,
+  Avatar,
+  CircularProgress,
+  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Card,
+  CardContent,
+  CardHeader
 } from '@mui/material';
 import {
   Work as WorkIcon,
   People as PeopleIcon,
   TrendingUp as TrendingUpIcon,
+  AttachMoney as MoneyIcon,
+  Category as CategoryIcon,
+  LocationOn as LocationIcon,
+  BarChart as BarChartIcon,
   Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon,
-  Pending as PendingIcon,
-  Cancel as CancelIcon
+  Edit as DraftIcon,
+  Lock as LockIcon,
+  Help as HelpIcon
 } from '@mui/icons-material';
+import { getEmployerAnalytics } from '../../services/api';
 
-// Dummy data for testing
-const DUMMY_DATA = {
-  jobs: [
-    {
-      id: 1,
-      title: 'Senior Software Engineer',
-      location: 'Riyadh, Saudi Arabia',
-      type: 'Full-time',
-      status: 'Active',
-      applications: 24,
-      postedDate: '2024-03-01'
-    },
-    {
-      id: 2,
-      title: 'UI/UX Designer',
-      location: 'Remote',
-      type: 'Full-time',
-      status: 'Active',
-      applications: 18,
-      postedDate: '2024-03-05'
-    },
-    {
-      id: 3,
-      title: 'Product Manager',
-      location: 'Jeddah, Saudi Arabia',
-      type: 'Full-time',
-      status: 'Active',
-      applications: 15,
-      postedDate: '2024-03-08'
-    },
-    {
-      id: 4,
-      title: 'Frontend Developer',
-      location: 'Dammam, Saudi Arabia',
-      type: 'Contract',
-      status: 'Closed',
-      applications: 12,
-      postedDate: '2024-02-15'
-    },
-    {
-      id: 5,
-      title: 'DevOps Engineer',
-      location: 'Riyadh, Saudi Arabia',
-      type: 'Full-time',
-      status: 'Pending',
-      applications: 8,
-      postedDate: '2024-03-10'
-    }
-  ],
-  applications: [
-    {
-      id: 1,
-      applicantName: 'Ahmed Mohammed',
-      jobTitle: 'Senior Software Engineer',
-      status: 'Pending',
-      appliedDate: '2024-03-15'
-    },
-    {
-      id: 2,
-      applicantName: 'Sara Abdullah',
-      jobTitle: 'UI/UX Designer',
-      status: 'Interviewing',
-      appliedDate: '2024-03-14'
-    },
-    {
-      id: 3,
-      applicantName: 'Khalid Al-Saud',
-      jobTitle: 'Product Manager',
-      status: 'Reviewed',
-      appliedDate: '2024-03-13'
-    },
-    {
-      id: 4,
-      applicantName: 'Fatima Hassan',
-      jobTitle: 'Frontend Developer',
-      status: 'Hired',
-      appliedDate: '2024-03-12'
-    },
-    {
-      id: 5,
-      applicantName: 'Omar Yusuf',
-      jobTitle: 'DevOps Engineer',
-      status: 'Pending',
-      appliedDate: '2024-03-11'
-    }
-  ]
+// Helper functions for job status
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return '#36b37e';
+    case 'draft':
+      return '#ffab00';
+    case 'closed':
+      return '#ff5630';
+    case 'expired':
+      return '#666';
+    default:
+      return '#9e9e9e';
+  }
+};
+
+const getStatusIcon = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return <TrendingUpIcon />;
+    case 'draft':
+      return <DraftIcon />;
+    case 'closed':
+      return <LockIcon />;
+    case 'expired':
+      return <ScheduleIcon />;
+    default:
+      return <HelpIcon />;
+  }
+};
+
+// Initial state for analytics
+const initialAnalytics = {
+  totalJobs: 0,
+  activeJobs: 0,
+  totalApplications: 0,
+  averageSalary: { min: 0, max: 0 },
+  topSkills: [],
+  jobTypeDistribution: [],
+  workPlaceTypeDistribution: []
 };
 
 const Dashboard = () => {
-  const [jobs, setJobs] = useState(DUMMY_DATA.jobs);
-  const [applications, setApplications] = useState(DUMMY_DATA.applications);
-  const [loading, setLoading] = useState(false);
+  const [analytics, setAnalytics] = useState(initialAnalytics);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const role = localStorage.getItem('userRole') || 'employer';
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const data = await getEmployerAnalytics();
+        setAnalytics(data);
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
   }, []);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active': return '#36b37e';
-      case 'Pending': return '#f7b924';
-      case 'Closed': return '#ff5630';
-      default: return '#667eea';
-    }
-  };
+  // Extract data for easier access
+  const { 
+    totalJobs, 
+    activeJobs, 
+    totalApplications, 
+    averageSalary, 
+    topSkills, 
+    jobTypeDistribution, 
+    workPlaceTypeDistribution 
+  } = analytics;
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Active': return <CheckCircleIcon />;
-      case 'Pending': return <PendingIcon />;
-      case 'Closed': return <CancelIcon />;
-      default: return <ScheduleIcon />;
-    }
-  };
-
-  const totalJobs = jobs.length;
-  const activeJobs = jobs.filter(job => job.status === 'Active').length;
-  const totalApplications = applications.length;
-  const responseRate = Math.round((totalApplications / totalJobs) * 100);
+  const responseRate = totalJobs > 0 ? Math.round((totalApplications / totalJobs) * 100) : 0;
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress sx={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }} />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '80vh' 
+      }}>
+        <CircularProgress />
       </Box>
     );
   }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
   return (
     <Box>
@@ -163,9 +157,10 @@ const Dashboard = () => {
           <Paper
             sx={{
               p: 3,
+              height: '100%',
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: 'white',
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
@@ -173,15 +168,20 @@ const Dashboard = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
                   Total Jobs
                 </Typography>
-                <Typography variant="h4" fontWeight={600} sx={{ color: '#667eea' }}>
+                <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
                   {totalJobs}
                 </Typography>
               </Box>
-              <Avatar sx={{ bgcolor: '#667eea', width: 56, height: 56, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                <WorkIcon />
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <WorkIcon sx={{ fontSize: 32 }} />
               </Avatar>
             </Box>
           </Paper>
@@ -191,9 +191,10 @@ const Dashboard = () => {
           <Paper
             sx={{
               p: 3,
+              height: '100%',
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              background: 'linear-gradient(135deg, #36b37e, #00a854)',
+              color: 'white',
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
@@ -201,15 +202,20 @@ const Dashboard = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
                   Active Jobs
                 </Typography>
-                <Typography variant="h4" fontWeight={600} sx={{ color: '#764ba2' }}>
+                <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
                   {activeJobs}
                 </Typography>
               </Box>
-              <Avatar sx={{ bgcolor: '#764ba2', width: 56, height: 56, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                <TrendingUpIcon />
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.2)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <TrendingUpIcon sx={{ fontSize: 32 }} />
               </Avatar>
             </Box>
           </Paper>
@@ -219,9 +225,10 @@ const Dashboard = () => {
           <Paper
             sx={{
               p: 3,
+              height: '100%',
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              background: 'linear-gradient(135deg, #ff9a9e, #fad0c4)',
+              color: '#333',
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
@@ -229,15 +236,20 @@ const Dashboard = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
                   Total Applications
                 </Typography>
-                <Typography variant="h4" fontWeight={600} sx={{ color: '#36b37e' }}>
+                <Typography variant="h3" fontWeight={700}>
                   {totalApplications}
                 </Typography>
               </Box>
-              <Avatar sx={{ bgcolor: '#36b37e', width: 56, height: 56, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                <PeopleIcon />
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.5)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <PeopleIcon sx={{ fontSize: 32, color: '#333' }} />
               </Avatar>
             </Box>
           </Paper>
@@ -247,9 +259,10 @@ const Dashboard = () => {
           <Paper
             sx={{
               p: 3,
+              height: '100%',
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              background: 'linear-gradient(135deg, #a18cd1, #fbc2eb)',
+              color: '#333',
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
@@ -257,135 +270,229 @@ const Dashboard = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
                   Response Rate
                 </Typography>
-                <Typography variant="h4" fontWeight={600} sx={{ color: '#ff5630' }}>
+                <Typography variant="h3" fontWeight={700}>
                   {responseRate}%
                 </Typography>
               </Box>
-              <Avatar sx={{ bgcolor: '#ff5630', width: 56, height: 56, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                <ScheduleIcon />
+              <Avatar sx={{ 
+                bgcolor: 'rgba(255,255,255,0.5)', 
+                width: 64, 
+                height: 64, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+              }}>
+                <BarChartIcon sx={{ fontSize: 32, color: '#333' }} />
               </Avatar>
             </Box>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Recent Jobs and Applications */}
-      <Grid container spacing={3}>
-        {/* Recent Jobs */}
-        <Grid item xs={12} lg={6}>
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-              height: 400
-            }}
-          >
-            <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600, mb: 2 }}>
-              Recent Job Postings
-            </Typography>
-            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-              {jobs.map((job, index) => (
-                <React.Fragment key={job.id}>
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: getStatusColor(job.status) }}>
-                        {getStatusIcon(job.status)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" fontWeight={500}>
-                          {job.title}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            {job.location} • {job.type}
-                          </Typography>
-                          <Chip
-                            label={job.status}
-                            size="small"
-                            sx={{
-                              mt: 1,
-                              background: `linear-gradient(135deg, ${getStatusColor(job.status)}, ${getStatusColor(job.status)}dd)`,
-                              color: 'white',
-                              fontWeight: 500
-                            }}
-                          />
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                  {index < jobs.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+      {/* Analytics Sections */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Salary Range Card */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <MoneyIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Average Salary Range
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                Average salary across all job postings
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                  {formatCurrency(averageSalary.min)}
+                </Typography>
+                <Box sx={{ mx: 2, color: 'text.secondary' }}>to</Box>
+                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                  {formatCurrency(averageSalary.max)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                  SAR / year
+                </Typography>
+              </Box>
+              <Box sx={{ mt: 2, width: '100%', height: 8, bgcolor: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+                <Box 
+                  sx={{ 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, #36b37e, #667eea)',
+                    borderRadius: 4,
+                    width: '100%'
+                  }} 
+                />
+              </Box>
+            </Box>
           </Paper>
         </Grid>
-
-        {/* Recent Applications */}
-        <Grid item xs={12} lg={6}>
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-              height: 400
-            }}
-          >
-            <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600, mb: 2 }}>
-              Recent Applications
-            </Typography>
-            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-              {applications.map((application, index) => (
-                <React.Fragment key={application.id}>
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: '#667eea' }}>
-                        {application.applicantName.charAt(0)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle1" fontWeight={500}>
-                          {application.applicantName}
-                        </Typography>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Applied for: {application.jobTitle}
-                          </Typography>
-                          <Chip
-                            label={application.status}
-                            size="small"
-                            sx={{
-                              mt: 1,
-                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                              color: 'white',
-                              fontWeight: 500
-                            }}
-                          />
+        
+        {/* Top Skills Card */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <CategoryIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Top In-Demand Skills
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {topSkills.length > 0 ? (
+                <Grid container spacing={1}>
+                  {topSkills.map((skill, index) => (
+                    <Grid item key={index}>
+                      <Box 
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          borderRadius: 4,
+                          bgcolor: index % 2 === 0 ? '#f0f4ff' : '#f0fff4',
+                          color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                          fontWeight: 500,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        <span>{skill.skill}</span>
+                        <Box 
+                          component="span" 
+                          sx={{
+                            ml: 1,
+                            bgcolor: index % 2 === 0 ? '#e3e6ff' : '#d4edda',
+                            color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 4,
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {skill.count}
                         </Box>
-                      }
-                    />
-                  </ListItem>
-                  {index < applications.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No skill data available
+                </Typography>
+              )}
+            </Box>
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Distribution Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Job Type Distribution */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <WorkIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Job Type Distribution
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {jobTypeDistribution.length > 0 ? (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Job Type</TableCell>
+                        <TableCell align="right">Count</TableCell>
+                        <TableCell align="right">Percentage</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {jobTypeDistribution.map((jobType, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{jobType.type}</TableCell>
+                          <TableCell align="right">{jobType.count}</TableCell>
+                          <TableCell align="right">
+                            {Math.round((jobType.count / totalJobs) * 100) || 0}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No job type data available
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Workplace Type Distribution */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LocationIcon sx={{ mr: 1, color: '#667eea' }} />
+              <Typography variant="h6" fontWeight={600}>
+                Workplace Type Distribution
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              {workPlaceTypeDistribution.length > 0 ? (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Workplace Type</TableCell>
+                        <TableCell align="right">Count</TableCell>
+                        <TableCell align="right">Percentage</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {workPlaceTypeDistribution.map((workplace, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{workplace.type}</TableCell>
+                          <TableCell align="right">{workplace.count}</TableCell>
+                          <TableCell align="right">
+                            {Math.round((workplace.count / totalJobs) * 100) || 0}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No workplace type data available
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Placeholder for Future Implementation */}
+      <Paper
+        sx={{
+          p: 4,
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          mb: 4
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600, mb: 2 }}>
+          More Analytics Coming Soon
+        </Typography>
+        <Typography color="text.secondary">
+          We're working on adding more detailed analytics and insights to help you track your job postings and applications.
+        </Typography>
+      </Paper>
     </Box>
   );
 };

@@ -13,10 +13,10 @@ import BusinessIcon from '@mui/icons-material/Business';
 
 // Dummy data for testing
 const DUMMY_DATA = {
-  totalJobs: 156,
-  activeJobs: 89,
-  totalApplications: 432,
-  totalHired: 67,
+  totalJobs: 15,
+  activeJobs: 15,
+  totalApplications: 7,
+  totalHired: 1,
   applicationsByStatus: [
     { name: 'Pending', value: 145 },
     { name: 'Reviewed', value: 98 },
@@ -25,12 +25,12 @@ const DUMMY_DATA = {
     { name: 'Rejected', value: 46 }
   ],
   applicationsByJob: [
-    { title: 'Senior Developer', applications: 45 },
-    { title: 'UI/UX Designer', applications: 38 },
-    { title: 'Project Manager', applications: 32 },
-    { title: 'DevOps Engineer', applications: 28 },
-    { title: 'Data Scientist', applications: 25 },
-    { title: 'Frontend Developer', applications: 22 }
+    { title: 'Senior Developer', applications: 1 },
+    { title: 'UI/UX Designer', applications: 1 },
+    { title: 'Project Manager', applications: 1 },
+    { title: 'DevOps Engineer', applications: 1 },
+    { title: 'Data Scientist', applications: 1 },
+    { title: 'Frontend Developer', applications: 1 }
   ],
   recentApplications: [
     {

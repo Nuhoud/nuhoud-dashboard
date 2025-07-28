@@ -478,4 +478,25 @@ export const updateProfile = async (userId, data) => {
   }
 };
 
+// Get employer analytics data
+export const getEmployerAnalytics = async () => {
+  try {
+    const response = await apiJobs.get('/job-offers/analytics', { 
+      headers: getAuthHeaders() 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching employer analytics:', error);
+    return {
+      totalJobs: 0,
+      activeJobs: 0,
+      totalApplications: 0,
+      averageSalary: { min: 0, max: 0 },
+      topSkills: [],
+      jobTypeDistribution: [],
+      workPlaceTypeDistribution: []
+    };
+  }
+};
+
 export default apiMain;
