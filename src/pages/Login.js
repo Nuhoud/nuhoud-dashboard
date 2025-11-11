@@ -91,7 +91,15 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err); // For debugging
-      setError(err.response?.data?.message || 'Invalid credentials');
+      // Handle different error response formats
+      const errorMessage = 
+        (err.response?.data?.message) || 
+        (typeof err.response?.data === 'string' ? err.response.data : null) ||
+        (typeof err.response?.data?.error === 'string' ? err.response.data.error : null) ||
+        'Invalid credentials';
+      
+      // Ensure we're setting a string, not an object
+      setError(String(errorMessage));
     } finally {
       setLoading(false);
     }
