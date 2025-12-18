@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
+import { NotificationProvider } from './context/NotificationsContext';
 
 // Admin Routes
 import Dashboard from './pages/admin/Dashboard';
@@ -51,41 +52,43 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={<MainLayout />}>
-            {/* Admin Routes */}
-            <Route path="admin" element={<ProtectedRoute role="admin" />}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="create-admin" element={<CreateAdmin />} />
-              <Route path="create-employer" element={<CreateEmployer />} />
-              <Route path="job-offers" element={<JobOffers />} />
-              <Route path="job-offers/:jobId/applications" element={<JobApplicationsList />} />
-              <Route path="job-applicants" element={<JobApplicants />} />
-              <Route path="users" element={<Users />} />
-              <Route path="profile" element={<Profile />} />
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<MainLayout />}>
+              {/* Admin Routes */}
+              <Route path="admin" element={<ProtectedRoute role="admin" />}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="create-admin" element={<CreateAdmin />} />
+                <Route path="create-employer" element={<CreateEmployer />} />
+                <Route path="job-offers" element={<JobOffers />} />
+                <Route path="job-offers/:jobId/applications" element={<JobApplicationsList />} />
+                <Route path="job-applicants" element={<JobApplicants />} />
+                <Route path="users" element={<Users />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
+
+              {/* Employer Routes */}
+              <Route path="employer" element={<ProtectedRoute role="employer" />}>
+                <Route path="dashboard" element={<EmployerDashboard />} />
+                <Route path="jobs" element={<MyJobs />} />
+                <Route path="jobs/create" element={<CreateJobOffer />} />
+                <Route path="jobs/:jobId/applications" element={<JobApplicationsList />} />
+                <Route path="jobs/:jobId/applicants" element={<Applicants />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
+
+              {/* Shared Routes */}
+              <Route path="application/:id" element={<ApplicationDetail />} />
+
+              {/* Default redirect */}
+              <Route index element={<Navigate to="/login" replace />} />
             </Route>
-
-            {/* Employer Routes */}
-            <Route path="employer" element={<ProtectedRoute role="employer" />}>
-              <Route path="dashboard" element={<EmployerDashboard />} />
-              <Route path="jobs" element={<MyJobs />} />
-              <Route path="jobs/create" element={<CreateJobOffer />} />
-              <Route path="jobs/:jobId/applications" element={<JobApplicationsList />} />
-              <Route path="jobs/:jobId/applicants" element={<Applicants />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-
-            {/* Shared Routes */}
-            <Route path="application/:id" element={<ApplicationDetail />} />
-
-            {/* Default redirect */}
-            <Route index element={<Navigate to="/login" replace />} />
-          </Route>
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }

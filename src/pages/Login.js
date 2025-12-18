@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 import { login } from '../services/api';
 import jwtDecode from 'jwt-decode';
+import config from '../config/environment';
+import { registerAndSendFcmToken } from '../fcmClient';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import BusinessIcon from '@mui/icons-material/Business';
 import EmailIcon from '@mui/icons-material/Email';
@@ -80,6 +82,9 @@ const Login = () => {
         const userEmail = decoded.email || (identifier.includes('@') ? identifier : '');
         console.log('Saving email to localStorage:', userEmail);
         localStorage.setItem('userEmail', userEmail);
+
+        // Register FCM and send token to backend (runs only after login)
+        registerAndSendFcmToken();
         
         if (decoded.role === 'admin') {
           navigate('/admin/dashboard');

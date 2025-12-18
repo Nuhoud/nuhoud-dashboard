@@ -1,8 +1,8 @@
 // Environment configuration
 const config = {
   development: {
-    API_URL_MAIN: process.env.REACT_APP_API_URL_MAIN || 'http://localhost:3000',
-    API_URL_JOBS: process.env.REACT_APP_API_URL_JOBS || 'http://localhost:4000',
+    API_URL_MAIN: process.env.REACT_APP_API_URL_MAIN || 'http://localhost/Nuhoud',
+    API_URL_JOBS: process.env.REACT_APP_API_URL_JOBS || 'http://localhost/NuhoudJob',
     DEBUG: true,
     LOG_LEVEL: 'debug',
   },
@@ -13,8 +13,8 @@ const config = {
     LOG_LEVEL: 'error',
   },
   test: {
-    API_URL_MAIN: process.env.REACT_APP_API_URL_MAIN || 'http://localhost:3000',
-    API_URL_JOBS: process.env.REACT_APP_API_URL_JOBS || 'http://localhost:4000',
+    API_URL_MAIN: process.env.REACT_APP_API_URL_MAIN || 'http://localhost/Nuhoud',
+    API_URL_JOBS: process.env.REACT_APP_API_URL_JOBS || 'http://localhost/NuhoudJob',
     DEBUG: true,
     LOG_LEVEL: 'debug',
   }

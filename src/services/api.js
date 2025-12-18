@@ -79,7 +79,7 @@ addRequestInterceptor(apiMain);
 addRequestInterceptor(apiJobs);
 
 // Helper to get token
-const getAuthHeaders = () => {
+export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
@@ -96,6 +96,13 @@ export const login = async (identifier, password) => {
     throw error;
   }
 };
+
+export const SendFCMtokentobackend = async (data) => {
+  const response = await apiMain.post('/firebase/devices', data, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+
 
 export const logout = async () => {
   try {

@@ -3,8 +3,11 @@ import { Box, CssBaseline } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import { useFcmForegroundNotifications } from '../hooks/useFcmForegroundNotifications';
 
 const MainLayout = () => {
+  useFcmForegroundNotifications();
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <CssBaseline />

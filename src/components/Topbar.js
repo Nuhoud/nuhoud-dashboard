@@ -23,6 +23,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../context/NotificationsContext';
 
 const Topbar = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Topbar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
+  const { notifications, unreadCount, markAllRead } = useNotifications();
   
   const userRole = localStorage.getItem('userRole');
   const userName = localStorage.getItem('userName') || 'User';
@@ -41,6 +43,7 @@ const Topbar = () => {
 
   const handleNotificationMenuOpen = (event) => {
     setNotificationAnchor(event.currentTarget);
+    markAllRead();
   };
 
   const handleMenuClose = () => {
@@ -133,18 +136,18 @@ const Topbar = () => {
             <IconButton
               onClick={handleNotificationMenuOpen}
               sx={{
-                color: '#666',
-                '&:hover': {
-                  background: 'rgba(102, 126, 234, 0.1)',
-                  color: '#667eea',
-                },
-              }}
-            >
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+              color: '#666',
+              '&:hover': {
+                background: 'rgba(102, 126, 234, 0.1)',
+                color: '#667eea',
+              },
+            }}
+          >
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+        </Tooltip>
 
           {/* User Profile */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
@@ -202,53 +205,38 @@ const Topbar = () => {
           },
         }}
       >
-        <MenuItem sx={{ py: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: '#38a169' }}>
-              <NotificationsIcon sx={{ fontSize: 16 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                New Job Application
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#666' }}>
-                You have a new application for Senior Developer position
-              </Typography>
-            </Box>
-          </Box>
-        </MenuItem>
-        <Divider />
-        <MenuItem sx={{ py: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: '#d69e2e' }}>
-              <NotificationsIcon sx={{ fontSize: 16 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                System Update
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#666' }}>
-                Platform maintenance scheduled for tomorrow
-              </Typography>
-            </Box>
-          </Box>
-        </MenuItem>
-        <Divider />
-        <MenuItem sx={{ py: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: '#667eea' }}>
-              <NotificationsIcon sx={{ fontSize: 16 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Welcome Message
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#666' }}>
-                Welcome to NUHOUD platform! Explore your dashboard
-              </Typography>
-            </Box>
-          </Box>
-        </MenuItem>
+        {notifications.length === 0 && (
+          <MenuItem sx={{ py: 2 }}>
+            <Typography variant="body2" sx={{ color: '#666' }}>
+              No notifications yet
+            </Typography>
+          </MenuItem>
+        )}
+        {notifications.map((notification, idx) => (
+          <React.Fragment key={notification.id}>
+            {idx > 0 && <Divider />}
+            <MenuItem sx={{ py: 2, alignItems: 'flex-start' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: '#667eea' }}>
+                  <NotificationsIcon sx={{ fontSize: 16 }} />
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {notification.title}
+                  </Typography>
+                  {notification.body && (
+                    <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
+                      {notification.body}
+                    </Typography>
+                  )}
+                  <Typography variant="caption" sx={{ color: '#999' }}>
+                    {new Date(notification.receivedAt).toLocaleTimeString()}
+                  </Typography>
+                </Box>
+              </Box>
+            </MenuItem>
+          </React.Fragment>
+        ))}
       </Menu>
 
       {/* User Profile Menu */}
