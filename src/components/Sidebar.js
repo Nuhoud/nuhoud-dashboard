@@ -237,7 +237,7 @@ const Sidebar = () => {
             fontSize: '0.7rem',
           }}
         >
-          © 2024 NUHOUD Platform
+          © 2026 NUHOUD Platform
         </Typography>
       </Box>
     </Drawer>

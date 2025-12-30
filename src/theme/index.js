@@ -54,7 +54,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"IBM Plex Sans", "IBM Plex Sans Arabic", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: { fontSize: '2.5rem', fontWeight: 700, lineHeight: 1.2 },
     h2: { fontSize: '2.1rem', fontWeight: 700, lineHeight: 1.25 },
     h3: { fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.3 },
@@ -77,6 +77,7 @@ const theme = createTheme({
         body: {
           backgroundColor: '#f6f4fb',
           color: '#1f1a2e',
+          fontFamily: '"IBM Plex Sans", "IBM Plex Sans Arabic", "Roboto", "Helvetica", "Arial", sans-serif',
         },
         '::selection': {
           backgroundColor: alpha(primary, 0.2),
