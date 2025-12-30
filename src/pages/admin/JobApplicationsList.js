@@ -18,7 +18,7 @@ import {
   TableRow
 } from '@mui/material';
 
-import { getJobApplications, getJobOffer } from '../../services/api';
+import { getApiErrorMessage, getJobApplications, getJobOffer } from '../../services/api';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
 
@@ -34,13 +34,22 @@ const JobApplicationsList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [sortModel, setSortModel] = useState([{ field: 'postedAt', sort: 'desc' }]);
 
+  const normalizeListResponse = (payload) => {
+    if (Array.isArray(payload)) {
+      return { items: payload, total: payload.length };
+    }
+    const items = Array.isArray(payload?.data) ? payload.data : [];
+    const total = typeof payload?.total === 'number' ? payload.total : items.length;
+    return { items, total };
+  };
+
   const fetchJobDetails = async () => {
     try {
       const response = await getJobOffer(jobId);
       setJobDetails(response);
     } catch (err) {
       console.error('Error fetching job details:', err);
-      setError('Failed to load job details');
+      setError(getApiErrorMessage(err, 'Failed to load job details'));
     }
   };
 
@@ -54,11 +63,12 @@ const JobApplicationsList = () => {
         sortOrder: sortModel[0]?.sort || 'desc'
       });
       
-      setApplications(response.data || []);
-      setTotalCount(response.total || 0);
+      const { items, total } = normalizeListResponse(response);
+      setApplications(items);
+      setTotalCount(total);
     } catch (err) {
       console.error('Error fetching applications:', err);
-      setError('Failed to load applications. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to load applications. Please try again.'));
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import {
   Typography,
   Paper,
   Button,
+  Avatar,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,127 +21,389 @@ import {
   Grid
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import { getUsers, updateUser, deleteUser, createEmployer } from '../../services/api';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { getApiErrorMessage, getUsers, updateUser, deleteUser, createEmployer } from '../../services/api';
 
-const columns = [
-  { field: 'name', headerName: 'Name', width: 200 },
-  { field: 'email', headerName: 'Email', width: 250 },
-  {
-    field: 'role',
-    headerName: 'Role',
-    width: 120,
-    renderCell: (params) => {
-      if (!params?.row) return null;
-      let roleValue = params.row.role;
-      // Only allow 'user', 'admin', or 'employer'
-      if (!['user', 'admin', 'employer'].includes(roleValue)) {
-        roleValue = 'user';
-      }
-      return (
-        <Chip
-          label={roleValue.charAt(0).toUpperCase() + roleValue.slice(1)}
-          color={roleValue === 'admin' ? 'primary' : roleValue === 'employer' ? 'secondary' : 'default'}
-          size="small"
-          sx={{
-            background: roleValue === 'admin' ? 'linear-gradient(135deg, #667eea, #764ba2)' : roleValue === 'employer' ? 'linear-gradient(135deg, #764ba2, #667eea)' : 'linear-gradient(135deg, #bdbdbd, #757575)',
-            color: 'white',
-            fontWeight: 500
-          }}
-        />
-      );
-    },
-  },
-  { field: 'createdAt', headerName: 'Created', width: 120, valueFormatter: (params) => {
-    if (!params || !params.value) return 'N/A';
-    return new Date(params.value).toLocaleDateString();
-  }},
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    width: 120,
-    renderCell: (params) => {
-      if (!params?.row) return null;
-      return (
-        <Box>
-          <IconButton
-            size="small"
-            onClick={() => params.row.onEdit(params.row)}
-            sx={{ color: '#667eea' }}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => params.row.onDelete(params.row)}
-            sx={{ color: '#ff5630' }}
-          >
-            <DeleteIcon />
-          </IconButton>
+const EMPTY_VALUE = '-';
+
+const formatDateTime = (value) => {
+  if (!value) return EMPTY_VALUE;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return EMPTY_VALUE;
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const formatDate = (value) => {
+  if (!value) return EMPTY_VALUE;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return EMPTY_VALUE;
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+const formatLabel = (value) => {
+  if (!value) return '';
+  return String(value)
+    .replace(/_/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const normalizeUsersPayload = (payload) => {
+  if (Array.isArray(payload)) {
+    return { data: payload, total: payload.length, page: 1, totalPages: 1 };
+  }
+  const data = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload?.data?.data)
+      ? payload.data.data
+      : [];
+  const total = Number(payload?.total ?? payload?.data?.total ?? data.length) || 0;
+  const page = Number(payload?.page ?? payload?.data?.page ?? 1) || 1;
+  const totalPages = Number(payload?.totalPages ?? payload?.data?.totalPages ?? (total ? Math.ceil(total / (data.length || 1)) : 1)) || 1;
+  return { data, total, page, totalPages };
+};
+
+const UserDetailsDialog = ({ open, onClose, user }) => {
+  if (!user) return null;
+
+  const avatarUrl = user.url || user.avatarUrl || user.avatar || user.photo || user.image || '';
+  const contact = user.email || user.mobile || user.phone || EMPTY_VALUE;
+  const createdAt = formatDateTime(user.createdAt || user.created_at || user.created);
+
+  const basic = user.basic || {};
+  const education = Array.isArray(user.education) ? user.education : [];
+  const experiences = Array.isArray(user.experiences) ? user.experiences : [];
+  const certifications = Array.isArray(user.certifications)
+    ? user.certifications
+    : Array.isArray(user.certificates)
+      ? user.certificates
+      : [];
+  const goals = user.goals;
+  const jobPreferences = user.jobPreferences;
+
+  const skills = user.skills || {};
+  const technicalSkills = Array.isArray(skills.technical)
+    ? skills.technical
+    : Array.isArray(skills)
+      ? skills
+      : [];
+  const softSkills = Array.isArray(skills.soft) ? skills.soft : [];
+
+  const renderEmpty = () => (
+    <Typography variant="body2" color="text.secondary">
+      No data
+    </Typography>
+  );
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === '') return EMPTY_VALUE;
+    if (Array.isArray(value)) return value.length ? value.join(', ') : EMPTY_VALUE;
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  };
+
+  const renderKeyValue = (label, value) => (
+    <Box sx={{ mb: 1.5 }}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2">{formatValue(value)}</Typography>
+    </Box>
+  );
+
+  const renderList = (items, renderItem) => {
+    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {items.map((item, index) => renderItem(item, index))}
+      </Box>
+    );
+  };
+
+  const formatDateRange = (start, end) => {
+    const startText = formatDate(start);
+    const endText = end ? formatDate(end) : 'Present';
+    if (startText === EMPTY_VALUE && !end) return EMPTY_VALUE;
+    if (startText === EMPTY_VALUE && end) return endText;
+    return `${startText} - ${endText}`;
+  };
+
+  const renderEducationItem = (item, index) => {
+    const school = item?.institution || item?.school || item?.university || 'Education';
+    const degree = item?.degree || item?.field || item?.major || item?.title;
+    const dates = formatDateRange(item?.startDate || item?.from, item?.endDate || item?.to);
+    return (
+      <Box key={item?._id || item?.id || index}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {school}
+        </Typography>
+        {degree && <Typography variant="body2">{degree}</Typography>}
+        {dates !== EMPTY_VALUE && (
+          <Typography variant="caption" color="text.secondary">
+            {dates}
+          </Typography>
+        )}
+        {item?.description && (
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {item.description}
+          </Typography>
+        )}
+      </Box>
+    );
+  };
+
+  const renderExperienceItem = (item, index) => {
+    const title = item?.title || item?.role || item?.position || 'Experience';
+    const company = item?.company || item?.employer || item?.organization;
+    const dates = formatDateRange(item?.startDate || item?.from, item?.endDate || item?.to);
+    return (
+      <Box key={item?._id || item?.id || index}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+        {company && <Typography variant="body2">{company}</Typography>}
+        {dates !== EMPTY_VALUE && (
+          <Typography variant="caption" color="text.secondary">
+            {dates}
+          </Typography>
+        )}
+        {item?.description && (
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {item.description}
+          </Typography>
+        )}
+      </Box>
+    );
+  };
+
+  const renderSimpleList = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        {items.map((item, index) => (
+          <Typography key={item?._id || item?.id || index} variant="body2">
+            {formatValue(item?.name || item?.title || item)}
+          </Typography>
+        ))}
+      </Box>
+    );
+  };
+
+  const renderSkills = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {items.map((skill, index) => {
+          const name = skill?.name || skill?.skill || skill?.title || skill;
+          const level = skill?.level || skill?.proficiency || skill?.rating;
+          const baseLabel = name ? String(name) : formatValue(skill);
+          const label = level ? `${baseLabel} (${level})` : baseLabel;
+          return <Chip key={skill?._id || skill?.id || index} label={label} size="small" />;
+        })}
+      </Box>
+    );
+  };
+
+  const renderObjectGrid = (value) => {
+    if (!value) return renderEmpty();
+    if (Array.isArray(value)) return renderSimpleList(value);
+    if (typeof value !== 'object') {
+      return <Typography variant="body2">{String(value)}</Typography>;
+    }
+    const entries = Object.entries(value).filter(([, v]) => v !== null && v !== undefined && v !== '');
+    if (entries.length === 0) return renderEmpty();
+    return (
+      <Grid container spacing={2}>
+        {entries.map(([key, val]) => (
+          <Grid item xs={12} sm={6} key={key}>
+            <Typography variant="caption" color="text.secondary">
+              {formatLabel(key)}
+            </Typography>
+            <Typography variant="body2">{formatValue(val)}</Typography>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ color: '#667eea', fontWeight: 600 }}>User Details</DialogTitle>
+      <DialogContent dividers>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Avatar src={avatarUrl || undefined} sx={{ width: 64, height: 64, bgcolor: '#667eea' }}>
+            {(user.name || 'U').charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight={600}>
+              {user.name || 'User'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {contact}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+              <Chip
+                label={(user.role || 'user').charAt(0).toUpperCase() + (user.role || 'user').slice(1)}
+                size="small"
+                sx={{
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  fontWeight: 500
+                }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Created: {createdAt}
+              </Typography>
+              {avatarUrl && (
+                <Typography variant="caption" color="text.secondary">
+                  Avatar URL: {avatarUrl}
+                </Typography>
+              )}
+            </Box>
+          </Box>
         </Box>
-      );
-    },
-  },
-];
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Basic
+            </Typography>
+            {renderKeyValue('Gender', basic.gender)}
+            {renderKeyValue('Date of Birth', formatDate(basic.dateOfBirth))}
+            {renderKeyValue('Location', basic.location || user.location)}
+            {renderKeyValue(
+              'Languages',
+              Array.isArray(basic.languages) ? basic.languages.join(', ') : basic.languages
+            )}
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Goals
+            </Typography>
+            {renderObjectGrid(goals)}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Job Preferences
+            </Typography>
+            {renderObjectGrid(jobPreferences)}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Education
+            </Typography>
+            {renderList(education, renderEducationItem)}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Experiences
+            </Typography>
+            {renderList(experiences, renderExperienceItem)}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Certifications
+            </Typography>
+            {renderSimpleList(certifications)}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+              Skills
+            </Typography>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                Technical
+              </Typography>
+              {renderSkills(technicalSkills)}
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Soft
+              </Typography>
+              {renderSkills(softSkills)}
+            </Box>
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('user');
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [rowCount, setRowCount] = useState(0);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [detailsUser, setDetailsUser] = useState(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const fetchUsers = useCallback(async (role = 'user') => {
+  const fetchUsers = useCallback(async (role = 'user', page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const response = await getUsers(role);
-      if (response.data) {
-        // Try to find the array of users
-        const usersArray = Array.isArray(response.data)
-          ? response.data
-          : Array.isArray(response.data.data)
-            ? response.data.data
-            : [];
-        const usersWithActions = usersArray.map(user => ({
-          ...user,
-          id: user._id,
-          role: ['user', 'admin', 'employer'].includes(user.role) ? user.role : 'user',
-          onEdit: handleEditClick,
-          onDelete: handleDeleteClick,
-        }));
-        setUsers(usersWithActions);
-      }
+      const response = await getUsers(role, {
+        page,
+        limit,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      const { data, total } = normalizeUsersPayload(response);
+      const usersWithIds = data.map(user => ({
+        ...user,
+        id: user._id || user.id,
+        role: ['user', 'admin', 'employer'].includes(user.role) ? user.role : 'user',
+        createdAt: user.createdAt || user.created_at || user.created,
+      }));
+      setUsers(usersWithIds);
+      setRowCount(total || usersWithIds.length);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to fetch users:', error);
-      setSnackbar({ open: true, message: 'Failed to fetch users', severity: 'error' });
+      setSnackbar({ open: true, message: getApiErrorMessage(error, 'Failed to fetch users'), severity: 'error' });
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUsers(roleFilter);
-  }, [roleFilter, fetchUsers]);
+    fetchUsers(roleFilter, paginationModel.page + 1, paginationModel.pageSize);
+  }, [roleFilter, paginationModel.page, paginationModel.pageSize, fetchUsers]);
+
+  const handleRoleFilterChange = (event) => {
+    setRoleFilter(event.target.value);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  };
 
   const handleEditClick = (user) => {
     setEditingUser(user);
     setIsEditDialogOpen(true);
   };
 
+  const handleViewDetails = (user) => {
+    setDetailsUser(user);
+    setIsDetailsDialogOpen(true);
+  };
+
   const handleDeleteClick = (user) => {
     if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
       deleteUser(user.id)
         .then(() => {
-          fetchUsers(roleFilter);
+          fetchUsers(roleFilter, paginationModel.page + 1, paginationModel.pageSize);
           setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
         })
         .catch((error) => {
           // eslint-disable-next-line no-console
           console.error('Failed to delete user:', error);
-          setSnackbar({ open: true, message: 'Failed to delete user', severity: 'error' });
+          setSnackbar({ open: true, message: getApiErrorMessage(error, 'Failed to delete user'), severity: 'error' });
         });
     }
   };
@@ -150,13 +413,13 @@ const Users = () => {
       .then(() => {
         setIsEditDialogOpen(false);
         setEditingUser(null);
-        fetchUsers(roleFilter);
+        fetchUsers(roleFilter, paginationModel.page + 1, paginationModel.pageSize);
         setSnackbar({ open: true, message: 'User updated successfully', severity: 'success' });
       })
       .catch((error) => {
         // eslint-disable-next-line no-console
         console.error('Failed to update user:', error);
-        setSnackbar({ open: true, message: 'Failed to update user', severity: 'error' });
+        setSnackbar({ open: true, message: getApiErrorMessage(error, 'Failed to update user'), severity: 'error' });
       });
   };
 
@@ -171,19 +434,11 @@ const Users = () => {
       .then(() => {
         setIsCreateDialogOpen(false);
         setEditingUser(null);
-        fetchUsers(roleFilter);
+        fetchUsers(roleFilter, paginationModel.page + 1, paginationModel.pageSize);
         setSnackbar({ open: true, message: 'User created successfully', severity: 'success' });
       })
       .catch((error) => {
-        // Show error as string or list, not as object
-        let errorMsg = 'Failed to create user';
-        if (error.response?.data?.message) {
-          errorMsg = Array.isArray(error.response.data.message)
-            ? error.response.data.message.join(', ')
-            : error.response.data.message;
-        } else if (typeof error.message === 'string') {
-          errorMsg = error.message;
-        }
+        const errorMsg = getApiErrorMessage(error, 'Failed to create user');
         setSnackbar({ open: true, message: errorMsg, severity: 'error' });
       });
   };
@@ -195,11 +450,92 @@ const Users = () => {
       getUsers('admin')
     ]);
     return [
-      ...users.data, 
-      ...employers.data, 
-      ...admins.data
+      ...normalizeUsersPayload(users).data, 
+      ...normalizeUsersPayload(employers).data, 
+      ...normalizeUsersPayload(admins).data
     ];
   };
+
+  const columns = [
+    { field: 'name', headerName: 'Name', width: 200 },
+    {
+      field: 'contact',
+      headerName: 'Contact',
+      width: 220,
+      valueGetter: (value, row) => row?.email || row?.mobile || row?.phone || EMPTY_VALUE,
+      renderCell: (params) => params?.value || EMPTY_VALUE,
+    },
+    {
+      field: 'role',
+      headerName: 'Role',
+      width: 120,
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        let roleValue = params.row.role;
+        if (!['user', 'admin', 'employer'].includes(roleValue)) {
+          roleValue = 'user';
+        }
+        return (
+          <Chip
+            label={roleValue.charAt(0).toUpperCase() + roleValue.slice(1)}
+            color={roleValue === 'admin' ? 'primary' : roleValue === 'employer' ? 'secondary' : 'default'}
+            size="small"
+            sx={{
+              background: roleValue === 'admin'
+                ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                : roleValue === 'employer'
+                  ? 'linear-gradient(135deg, #764ba2, #667eea)'
+                  : 'linear-gradient(135deg, #bdbdbd, #757575)',
+              color: 'white',
+              fontWeight: 500
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: 'createdAt',
+      headerName: 'Created',
+      width: 160,
+      valueGetter: (value, row) => row?.createdAt || row?.created_at || row?.created,
+      valueFormatter: (value) => formatDateTime(value),
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 140,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        if (!params?.row) return null;
+        return (
+          <Box>
+            <IconButton
+              size="small"
+              onClick={() => handleViewDetails(params.row)}
+              sx={{ color: '#667eea' }}
+            >
+              <VisibilityIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleEditClick(params.row)}
+              sx={{ color: '#667eea' }}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteClick(params.row)}
+              sx={{ color: '#ff5630' }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        );
+      },
+    },
+  ];
 
   return (
     <Box>
@@ -236,7 +572,7 @@ const Users = () => {
             <Select
               value={roleFilter}
               label="Filter by Role"
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={handleRoleFilterChange}
             >
               <MenuItem value="user">User</MenuItem>
               <MenuItem value="admin">Admin</MenuItem>
@@ -249,9 +585,12 @@ const Users = () => {
           rows={users}
           columns={columns}
           loading={loading}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          disableSelectionOnClick
+          rowCount={rowCount}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[10, 25, 50]}
+          disableRowSelectionOnClick
           getRowId={(row) => row._id || row.id}
           sx={{
             border: 'none',
@@ -379,6 +718,15 @@ const Users = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <UserDetailsDialog
+        open={isDetailsDialogOpen}
+        onClose={() => {
+          setIsDetailsDialogOpen(false);
+          setDetailsUser(null);
+        }}
+        user={detailsUser}
+      />
 
       <Snackbar
         open={snackbar.open}

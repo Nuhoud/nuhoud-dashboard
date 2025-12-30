@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -36,6 +36,19 @@ const Topbar = () => {
   const userRole = localStorage.getItem('userRole');
   const userName = localStorage.getItem('userName') || 'User';
   const userEmail = localStorage.getItem('userEmail') || 'user@example.com';
+  const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem('userAvatar') || '');
+
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      setAvatarUrl(localStorage.getItem('userAvatar') || '');
+    };
+    window.addEventListener('profile-avatar-updated', handleAvatarUpdate);
+    window.addEventListener('storage', handleAvatarUpdate);
+    return () => {
+      window.removeEventListener('profile-avatar-updated', handleAvatarUpdate);
+      window.removeEventListener('storage', handleAvatarUpdate);
+    };
+  }, []);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -174,6 +187,7 @@ const Topbar = () => {
                 }}
               >
                 <Avatar
+                  src={avatarUrl || undefined}
                   sx={{
                     width: 40,
                     height: 40,

@@ -22,7 +22,7 @@ import {
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import Sidebar from '../../components/Sidebar';
 import Topbar from '../../components/Topbar';
-import { getApplications, updateApplicationStatus, deleteApplication } from '../../services/api';
+import { getApiErrorMessage, getApplications, updateApplicationStatus, deleteApplication } from '../../services/api';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -148,13 +148,15 @@ const Applications = () => {
       };
 
       const res = await getApplications(filters);
-      setApplications(res.data.map(app => ({ ...app, id: app._id })));
-      setTotalCount(res.total || res.data.length);
+      const items = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+      const total = typeof res?.total === 'number' ? res.total : items.length;
+      setApplications(items.map(app => ({ ...app, id: app._id })));
+      setTotalCount(total);
     } catch (error) {
       console.error('Error fetching applications:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to load applications',
+        message: getApiErrorMessage(error, 'Failed to load applications'),
         severity: 'error'
       });
     }
@@ -166,7 +168,7 @@ const Applications = () => {
   }, [page, pageSize, sortModel, filterModel]);
 
   const handleView = (id) => {
-    navigate(`/admin/application/${id}`);
+    navigate(`/application/${id}`);
   };
 
   const handleEdit = (app) => {
@@ -182,7 +184,7 @@ const Applications = () => {
       fetchApplications();
     } catch (error) {
       console.error('Error updating status:', error);
-      setSnackbar({ open: true, message: 'Failed to update status', severity: 'error' });
+      setSnackbar({ open: true, message: getApiErrorMessage(error, 'Failed to update status'), severity: 'error' });
     }
   };
 
@@ -194,7 +196,7 @@ const Applications = () => {
       fetchApplications();
     } catch (error) {
       console.error('Error deleting application:', error);
-      setSnackbar({ open: true, message: 'Failed to delete application', severity: 'error' });
+      setSnackbar({ open: true, message: getApiErrorMessage(error, 'Failed to delete application'), severity: 'error' });
     }
   };
 

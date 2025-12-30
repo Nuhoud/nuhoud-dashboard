@@ -30,14 +30,20 @@ The application will be available at `http://localhost:3001`
 Create a `.env` file in the root directory:
 
 ```env
-# Development
-REACT_APP_API_URL_MAIN=http://localhost:3000
-REACT_APP_API_URL_JOBS=http://localhost:3000
+# Development (via local nginx reverse proxy)
+REACT_APP_API_URL_MAIN=http://localhost/Nuhoud
+REACT_APP_API_URL_JOBS=http://localhost/NuhoudJob
+
+# Development (direct to services, without nginx)
+# REACT_APP_API_URL_MAIN=http://localhost:3000
+# REACT_APP_API_URL_JOBS=http://localhost:4000
 
 # Production
 REACT_APP_API_URL_MAIN=https://api.nuhoud.com
 REACT_APP_API_URL_JOBS=https://jobs-api.nuhoud.com
 ```
+
+Optional: set `REACT_APP_ENVIRONMENT=production|development|test` to select the config block used in `src/config/environment.js`.
 
 ## 🚀 Production Deployment
 

@@ -1,6 +1,5 @@
 import axios from 'axios';
 import config from '../config/environment';
-import { API_URL } from '../config/environment';
 
 // Create separate instances for each backend
 const apiMain = axios.create({ 
@@ -82,6 +81,18 @@ addRequestInterceptor(apiJobs);
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const getApiErrorMessage = (error, fallback = 'Something went wrong. Please try again.') => {
+  if (!error) return fallback;
+  const responseData = error.response?.data;
+  if (typeof responseData === 'string') return responseData;
+  if (Array.isArray(responseData?.message)) return responseData.message.join(', ');
+  if (typeof responseData?.message === 'string') return responseData.message;
+  if (Array.isArray(responseData)) return responseData.join(', ');
+  if (typeof responseData?.error === 'string') return responseData.error;
+  if (typeof error.message === 'string') return error.message;
+  return fallback;
 };
 
 // --- Auth & Users API (Port 3000) ---
@@ -304,18 +315,24 @@ export const deleteJobOffer = async (id) => {
 };
 
 export const getEmployerJobsAnalytics = async () => {
-  return apiJobs.get('/job-offers/employer/analytics', { headers: getAuthHeaders() });
+  const response = await apiJobs.get('/job-offers/employer/analytics', { headers: getAuthHeaders() });
+  return response.data;
 };
 
 export const getJobOffersAnalytics = async () => {
-  return apiJobs.get('/job-offers/analytics', { headers: getAuthHeaders() });
+  const response = await apiJobs.get('/job-offers/analytics', { headers: getAuthHeaders() });
+  return response.data;
 };
 
 export const getApplications = async (filters = {}) => {
-  return apiJobs.get('/application', { params: filters, headers: getAuthHeaders() });
+  const response = await apiJobs.get('/application', { params: filters, headers: getAuthHeaders() });
+  return response.data;
 };
 
-export const getApplication = (id) => apiJobs.get(`/application/${id}`, { headers: getAuthHeaders() });
+export const getApplication = async (id) => {
+  const response = await apiJobs.get(`/application/${id}`, { headers: getAuthHeaders() });
+  return response.data;
+};
 
 export const updateApplication = async (applicationId, data) => {
   const res = await apiJobs.patch(`/application/${applicationId}`, data, { headers: getAuthHeaders() });
@@ -327,10 +344,14 @@ export const updateApplicationStatus = async (applicationId, data) => {
   return response.data;
 };
 
-export const deleteApplication = (id) => apiJobs.delete(`/application/${id}`, { headers: getAuthHeaders() });
+export const deleteApplication = async (id) => {
+  const response = await apiJobs.delete(`/application/${id}`, { headers: getAuthHeaders() });
+  return response.data;
+};
 
 export const getUserProfile = async (userId) => {
-  return apiMain.get(`/users/${userId}/profile`, { headers: getAuthHeaders() });
+  const response = await apiMain.get(`/users/${userId}/profile`, { headers: getAuthHeaders() });
+  return response.data;
 };
 
 // --- File Upload API ---
@@ -338,12 +359,25 @@ export const uploadFile = async (file, type = 'document') => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('type', type);
-  return apiMain.post('/upload', formData, {
+  const response = await apiMain.post('/upload', formData, {
     headers: {
       ...getAuthHeaders(),
       'Content-Type': 'multipart/form-data',
     },
   });
+  return response.data;
+};
+
+export const uploadProfilePhoto = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiMain.post('/profile/photo', formData, {
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
 };
 
 // --- Utility functions ---
@@ -483,7 +517,7 @@ export const updateUserProfile = async (userData) => {
 export const updateProfile = async (userId, data) => {
   try {
     const response = await apiMain.patch(`/users/${userId}`, data);
-    return response;
+    return response.data;
   } catch (error) {
     throw error;
   }

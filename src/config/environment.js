@@ -20,7 +20,7 @@ const config = {
   }
 };
 
-const environment = process.env.NODE_ENV || 'development';
-const currentConfig = config[environment];
+const environment = process.env.REACT_APP_ENVIRONMENT || process.env.NODE_ENV || 'development';
+const currentConfig = config[environment] || config.development;
 
 export default currentConfig; 

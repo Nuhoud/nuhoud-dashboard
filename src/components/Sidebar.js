@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Drawer, 
   List, 
@@ -30,6 +30,19 @@ const Sidebar = () => {
   const location = useLocation();
   const userRole = localStorage.getItem('userRole');
   const userName = localStorage.getItem('userName') || 'User';
+  const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem('userAvatar') || '');
+
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      setAvatarUrl(localStorage.getItem('userAvatar') || '');
+    };
+    window.addEventListener('profile-avatar-updated', handleAvatarUpdate);
+    window.addEventListener('storage', handleAvatarUpdate);
+    return () => {
+      window.removeEventListener('profile-avatar-updated', handleAvatarUpdate);
+      window.removeEventListener('storage', handleAvatarUpdate);
+    };
+  }, []);
 
   const adminNavItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
@@ -107,6 +120,7 @@ const Sidebar = () => {
       <Box sx={{ p: 2, borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar 
+            src={avatarUrl || undefined}
             sx={{ 
               width: 48, 
               height: 48,

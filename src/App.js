@@ -25,6 +25,7 @@ import Applicants from './pages/employer/Applicants';
 // Common Routes
 import Login from './pages/Login';
 import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
 
 const theme = createTheme({
   palette: {
@@ -81,11 +82,14 @@ function App() {
               </Route>
 
               {/* Shared Routes */}
-              <Route path="application/:id" element={<ApplicationDetail />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="application/:id" element={<ApplicationDetail />} />
+              </Route>
 
               {/* Default redirect */}
               <Route index element={<Navigate to="/login" replace />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
       </NotificationProvider>

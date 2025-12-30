@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -30,9 +30,11 @@ import {
   Business as BusinessIcon,
   LocationOn as LocationIcon
 } from '@mui/icons-material';
-import { getUserProfile, updateUserProfile, getMyProfile, getEmployerJobStatistics } from '../services/api';
+import { getUserProfile, updateUserProfile, getMyProfile, getEmployerJobStatistics, uploadProfilePhoto, getApiErrorMessage } from '../services/api';
 
 const Profile = () => {
+  const MAX_PHOTO_SIZE_MB = 5;
+  const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -60,11 +62,25 @@ const Profile = () => {
   const [fetchingProfile, setFetchingProfile] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
 
   const fetchUserProfile = async () => {
     try {
@@ -75,6 +91,13 @@ const Profile = () => {
       ]);
       
       setUserRole(userData.role);
+      const storedAvatar = localStorage.getItem('userAvatar') || '';
+      const fetchedAvatar = userData.photo || userData.avatar || userData.avatarUrl || userData.image || storedAvatar;
+      if (fetchedAvatar && fetchedAvatar !== storedAvatar) {
+        localStorage.setItem('userAvatar', fetchedAvatar);
+        window.dispatchEvent(new Event('profile-avatar-updated'));
+      }
+      setProfilePhotoUrl(fetchedAvatar || '');
       setFormData(prev => ({
         ...prev,
         name: userData.name || '',
@@ -126,11 +149,92 @@ const Profile = () => {
     }
   };
 
+  const clearPhotoSelection = () => {
+    setSelectedPhoto(null);
+    setPhotoPreviewUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handlePhotoSelectClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError('');
+    setSuccess(false);
+    setSuccessMessage('');
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file.');
+      clearPhotoSelection();
+      return;
+    }
+
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      setError(`Image must be smaller than ${MAX_PHOTO_SIZE_MB}MB.`);
+      clearPhotoSelection();
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedPhoto(file);
+    setPhotoPreviewUrl(previewUrl);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!selectedPhoto) return;
+    setUploadingPhoto(true);
+    setError('');
+    setSuccess(false);
+    setSuccessMessage('');
+
+    try {
+      const response = await uploadProfilePhoto(selectedPhoto);
+      const newUrl = response?.url;
+
+      if (!newUrl) {
+        throw new Error('Upload succeeded but no photo URL was returned.');
+      }
+
+      setProfilePhotoUrl(newUrl);
+      localStorage.setItem('userAvatar', newUrl);
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...currentUser, avatarUrl: newUrl }));
+      window.dispatchEvent(new Event('profile-avatar-updated'));
+      clearPhotoSelection();
+      setSuccessMessage('Profile photo updated successfully!');
+      setSuccess(true);
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 413) {
+        setError(`Upload failed. Image must be smaller than ${MAX_PHOTO_SIZE_MB}MB.`);
+      } else if (status === 401) {
+        setError('Your session has expired. Please log in again.');
+      } else {
+        setError(getApiErrorMessage(err, 'Failed to upload profile photo. Please try again.'));
+      }
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess(false);
+    setSuccessMessage('');
 
     try {
       // Only include fields that have values
@@ -152,6 +256,7 @@ const Profile = () => {
 
       await updateUserProfile(updateData);
 
+      setSuccessMessage('Profile updated successfully!');
       setSuccess(true);
       // Clear password field after successful update
       setFormData(prev => ({
@@ -206,6 +311,7 @@ const Profile = () => {
             }}
           >
             <Avatar
+              src={photoPreviewUrl || profilePhotoUrl || undefined}
               sx={{
                 width: 120,
                 height: 120,
@@ -218,6 +324,50 @@ const Profile = () => {
             >
               {formData.name?.charAt(0) || 'U'}
             </Avatar>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handlePhotoChange}
+              disabled={uploadingPhoto}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={handlePhotoSelectClick}
+                disabled={uploadingPhoto}
+                sx={{ textTransform: 'none' }}
+              >
+                Upload / Change photo
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleUploadPhoto}
+                disabled={!selectedPhoto || uploadingPhoto}
+                sx={{ color: '#fff', textTransform: 'none' }}
+              >
+                {uploadingPhoto ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Save Photo'}
+              </Button>
+              {selectedPhoto && (
+                <Button
+                  variant="text"
+                  onClick={clearPhotoSelection}
+                  disabled={uploadingPhoto}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Cancel
+                </Button>
+              )}
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              JPG/PNG up to {MAX_PHOTO_SIZE_MB}MB
+            </Typography>
+            {selectedPhoto && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Selected: {selectedPhoto.name}
+              </Typography>
+            )}
             <Typography variant="h5" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
               {formData.name || 'User Name'}
             </Typography>
@@ -489,7 +639,7 @@ const Profile = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert severity="success" sx={{ width: '100%' }}>
-          Profile updated successfully!
+          {successMessage || 'Profile updated successfully!'}
         </Alert>
       </Snackbar>
     </Box>
