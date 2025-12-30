@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Paper, CircularProgress, Avatar, Chip, Button } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
 import { getApplicationsForJob } from '../../services/api';
 
@@ -82,7 +83,7 @@ const JobApplicantsAdmin = () => {
       width: 200,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
+          <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
             {params.value?.charAt(0) || 'A'}
           </Avatar>
           <Typography variant="body2" fontWeight={500}>
@@ -134,11 +135,11 @@ const JobApplicantsAdmin = () => {
             onClick={() => handleViewProfile(params.row.id)}
             sx={{
               borderRadius: 2,
-              borderColor: '#1976d2',
-              color: '#1976d2',
+              borderColor: 'primary.main',
+              color: 'primary.main',
               '&:hover': {
-                borderColor: '#1565c0',
-                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                borderColor: 'primary.dark',
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
               }
             }}
           >
@@ -172,11 +173,11 @@ const JobApplicantsAdmin = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 600, color: '#1976d2', mb: 3 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
         Job Applicants
       </Typography>
       
-      <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+      <Paper sx={{ p: 3, borderRadius: 3, boxShadow: (theme) => theme.shadows[3] }}>
         <Box sx={{ height: 500, width: '100%' }}>
           <DataGrid
             rows={applications}
@@ -184,29 +185,15 @@ const JobApplicantsAdmin = () => {
             pageSize={10}
             rowsPerPageOptions={[10, 20, 50]}
             disableSelectionOnClick
-            sx={{
-              border: 'none',
-              '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                color: '#1976d2',
-                fontWeight: 'bold',
-                borderRadius: 1,
-              },
-              '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #e0e0e0',
-              },
-              '& .MuiDataGrid-row:hover': {
-                backgroundColor: 'rgba(25, 118, 210, 0.04)',
-              },
-            }}
+            sx={{ border: 'none' }}
           />
         </Box>
       </Paper>
 
       {/* Applicant Profile Modal */}
       {selectedApplicant && applicantProfile && (
-        <Paper sx={{ mt: 3, p: 3, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
-          <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600, mb: 2 }}>
+        <Paper sx={{ mt: 3, p: 3, borderRadius: 3, boxShadow: (theme) => theme.shadows[3] }}>
+          <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
             Applicant Profile
           </Typography>
           <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>

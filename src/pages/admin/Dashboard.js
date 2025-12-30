@@ -22,6 +22,7 @@ import {
   CardContent,
   CardHeader
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Work as WorkIcon,
   People as PeopleIcon,
@@ -41,15 +42,15 @@ import { getEmployerAnalytics } from '../../services/api';
 const getStatusColor = (status) => {
   switch (status?.toLowerCase()) {
     case 'active':
-      return '#36b37e';
+      return 'success.main';
     case 'draft':
-      return '#ffab00';
+      return 'warning.main';
     case 'closed':
-      return '#ff5630';
+      return 'error.main';
     case 'expired':
-      return '#666';
+      return 'text.secondary';
     default:
-      return '#9e9e9e';
+      return 'text.disabled';
   }
 };
 
@@ -147,7 +148,7 @@ const Dashboard = () => {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#667eea', mb: 3 }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: 'primary.main', mb: 3 }}>
         Admin Dashboard
       </Typography>
 
@@ -155,32 +156,32 @@ const Dashboard = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 3,
               height: '100%',
               borderRadius: 4,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               color: 'white',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              boxShadow: theme.shadows[3],
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
-            }}
+            })}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: (theme) => alpha(theme.palette.common.white, 0.8), fontWeight: 500 }}>
                   Total Jobs
                 </Typography>
                 <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
                   {totalJobs}
                 </Typography>
               </Box>
-              <Avatar sx={{ 
-                bgcolor: 'rgba(255,255,255,0.2)', 
+              <Avatar sx={(theme) => ({ 
+                bgcolor: alpha(theme.palette.common.white, 0.2), 
                 width: 64, 
                 height: 64, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-              }}>
+                boxShadow: theme.shadows[2]
+              })}>
                 <WorkIcon sx={{ fontSize: 32 }} />
               </Avatar>
             </Box>
@@ -189,32 +190,32 @@ const Dashboard = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 3,
               height: '100%',
               borderRadius: 4,
-              background: 'linear-gradient(135deg, #36b37e, #00a854)',
+              background: `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`,
               color: 'white',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              boxShadow: theme.shadows[3],
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
-            }}
+            })}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: (theme) => alpha(theme.palette.common.white, 0.8), fontWeight: 500 }}>
                   Active Jobs
                 </Typography>
                 <Typography variant="h3" fontWeight={700} sx={{ color: 'white' }}>
                   {activeJobs}
                 </Typography>
               </Box>
-              <Avatar sx={{ 
-                bgcolor: 'rgba(255,255,255,0.2)', 
+              <Avatar sx={(theme) => ({ 
+                bgcolor: alpha(theme.palette.common.white, 0.2), 
                 width: 64, 
                 height: 64, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-              }}>
+                boxShadow: theme.shadows[2]
+              })}>
                 <TrendingUpIcon sx={{ fontSize: 32 }} />
               </Avatar>
             </Box>
@@ -223,33 +224,33 @@ const Dashboard = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 3,
               height: '100%',
               borderRadius: 4,
-              background: 'linear-gradient(135deg, #ff9a9e, #fad0c4)',
-              color: '#333',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              background: `linear-gradient(135deg, ${theme.palette.info.light}, ${theme.palette.info.main})`,
+              color: theme.palette.text.primary,
+              boxShadow: theme.shadows[3],
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
-            }}
+            })}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                   Total Applications
                 </Typography>
                 <Typography variant="h3" fontWeight={700}>
                   {totalApplications}
                 </Typography>
               </Box>
-              <Avatar sx={{ 
-                bgcolor: 'rgba(255,255,255,0.5)', 
+              <Avatar sx={(theme) => ({ 
+                bgcolor: alpha(theme.palette.common.white, 0.6), 
                 width: 64, 
                 height: 64, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-              }}>
-                <PeopleIcon sx={{ fontSize: 32, color: '#333' }} />
+                boxShadow: theme.shadows[2]
+              })}>
+                <PeopleIcon sx={{ fontSize: 32, color: 'text.primary' }} />
               </Avatar>
             </Box>
           </Paper>
@@ -257,33 +258,33 @@ const Dashboard = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 3,
               height: '100%',
               borderRadius: 4,
-              background: 'linear-gradient(135deg, #a18cd1, #fbc2eb)',
-              color: '#333',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.18)}, ${alpha(theme.palette.secondary.main, 0.22)})`,
+              color: theme.palette.text.primary,
+              boxShadow: theme.shadows[3],
               transition: 'transform 0.3s ease-in-out',
               '&:hover': { transform: 'translateY(-5px)' }
-            }}
+            })}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
-                <Typography variant="subtitle1" sx={{ color: 'rgba(0,0,0,0.7)', fontWeight: 500 }}>
+                <Typography variant="subtitle1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                   Response Rate
                 </Typography>
                 <Typography variant="h3" fontWeight={700}>
                   {responseRate}%
                 </Typography>
               </Box>
-              <Avatar sx={{ 
-                bgcolor: 'rgba(255,255,255,0.5)', 
+              <Avatar sx={(theme) => ({ 
+                bgcolor: alpha(theme.palette.common.white, 0.6), 
                 width: 64, 
                 height: 64, 
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-              }}>
-                <BarChartIcon sx={{ fontSize: 32, color: '#333' }} />
+                boxShadow: theme.shadows[2]
+              })}>
+                <BarChartIcon sx={{ fontSize: 32, color: 'text.primary' }} />
               </Avatar>
             </Box>
           </Paper>
@@ -296,7 +297,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <MoneyIcon sx={{ mr: 1, color: '#667eea' }} />
+              <MoneyIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Average Salary Range
               </Typography>
@@ -306,22 +307,23 @@ const Dashboard = () => {
                 Average salary across all job postings
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                <Typography variant="h5" fontWeight={600} sx={{ color: 'success.main' }}>
                   {formatCurrency(averageSalary.min)}
                 </Typography>
                 <Box sx={{ mx: 2, color: 'text.secondary' }}>to</Box>
-                <Typography variant="h5" fontWeight={600} sx={{ color: '#36b37e' }}>
+                <Typography variant="h5" fontWeight={600} sx={{ color: 'success.main' }}>
                   {formatCurrency(averageSalary.max)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
                   SAR / year
                 </Typography>
               </Box>
-              <Box sx={{ mt: 2, width: '100%', height: 8, bgcolor: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+              <Box sx={{ mt: 2, width: '100%', height: 8, bgcolor: 'action.hover', borderRadius: 4, overflow: 'hidden' }}>
                 <Box 
                   sx={{ 
                     height: '100%', 
-                    background: 'linear-gradient(90deg, #36b37e, #667eea)',
+                    background: (theme) =>
+                      `linear-gradient(90deg, ${theme.palette.success.main}, ${theme.palette.primary.main})`,
                     borderRadius: 4,
                     width: '100%'
                   }} 
@@ -335,7 +337,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <CategoryIcon sx={{ mr: 1, color: '#667eea' }} />
+              <CategoryIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Top In-Demand Skills
               </Typography>
@@ -346,31 +348,35 @@ const Dashboard = () => {
                   {topSkills.map((skill, index) => (
                     <Grid item key={index}>
                       <Box 
-                        sx={{
+                        sx={(theme) => ({
                           px: 2,
                           py: 1,
                           borderRadius: 4,
-                          bgcolor: index % 2 === 0 ? '#f0f4ff' : '#f0fff4',
-                          color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                          bgcolor: index % 2 === 0
+                            ? alpha(theme.palette.primary.main, 0.12)
+                            : alpha(theme.palette.secondary.main, 0.14),
+                          color: index % 2 === 0 ? theme.palette.primary.main : theme.palette.secondary.dark,
                           fontWeight: 500,
                           display: 'inline-flex',
                           alignItems: 'center',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                        }}
+                          boxShadow: theme.shadows[1]
+                        })}
                       >
                         <span>{skill.skill}</span>
                         <Box 
                           component="span" 
-                          sx={{
+                          sx={(theme) => ({
                             ml: 1,
-                            bgcolor: index % 2 === 0 ? '#e3e6ff' : '#d4edda',
-                            color: index % 2 === 0 ? '#3f51b5' : '#2e7d32',
+                            bgcolor: index % 2 === 0
+                              ? alpha(theme.palette.primary.main, 0.2)
+                              : alpha(theme.palette.secondary.main, 0.22),
+                            color: index % 2 === 0 ? theme.palette.primary.main : theme.palette.secondary.dark,
                             px: 1.5,
                             py: 0.5,
                             borderRadius: 4,
                             fontSize: '0.75rem',
                             fontWeight: 600
-                          }}
+                          })}
                         >
                           {skill.count}
                         </Box>
@@ -394,7 +400,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <WorkIcon sx={{ mr: 1, color: '#667eea' }} />
+              <WorkIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Job Type Distribution
               </Typography>
@@ -436,7 +442,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, borderRadius: 4, height: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <LocationIcon sx={{ mr: 1, color: '#667eea' }} />
+              <LocationIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Workplace Type Distribution
               </Typography>
@@ -477,16 +483,16 @@ const Dashboard = () => {
 
       {/* Placeholder for Future Implementation */}
       <Paper
-        sx={{
+        sx={(theme) => ({
           p: 4,
           borderRadius: 4,
-          background: 'rgba(255, 255, 255, 0.95)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: theme.shadows[2],
           textAlign: 'center',
           mb: 4
-        }}
+        })}
       >
-        <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600, mb: 2 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
           More Analytics Coming Soon
         </Typography>
         <Typography color="text.secondary">

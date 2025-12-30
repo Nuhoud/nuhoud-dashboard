@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography, Box, Alert, Paper } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { login } from '../../services/api';
 import jwtDecode from 'jwt-decode';
 import logo from '../../assets/logo-nuhoud.svg';
@@ -55,9 +56,9 @@ const EmployerLogin = () => {
         flexDirection: 'column', 
         alignItems: 'center', 
         borderRadius: 2,
-        background: 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.96),
         backdropFilter: 'blur(10px)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        boxShadow: (theme) => theme.shadows[3]
       }}>
         <Box sx={{ mb: 4, textAlign: 'center' }}>
           <img 
@@ -80,10 +81,10 @@ const EmployerLogin = () => {
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
-                  borderColor: '#667eea',
+                  borderColor: (theme) => theme.palette.primary.main,
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#667eea',
+                  borderColor: (theme) => theme.palette.primary.main,
                 },
               },
             }}
@@ -99,10 +100,10 @@ const EmployerLogin = () => {
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
-                  borderColor: '#667eea',
+                  borderColor: (theme) => theme.palette.primary.main,
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#667eea',
+                  borderColor: (theme) => theme.palette.primary.main,
                 },
               },
             }}
@@ -115,9 +116,11 @@ const EmployerLogin = () => {
             sx={{ 
               mt: 3, 
               mb: 2,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8, #6a4c93)',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
               },
               borderRadius: 2,
               textTransform: 'none',

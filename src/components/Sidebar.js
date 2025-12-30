@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
+import {
   Drawer, 
   List, 
   ListItemButton, 
@@ -12,6 +12,7 @@ import {
   Avatar,
   Chip
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Link, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -81,26 +82,27 @@ const Sidebar = () => {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        '& .MuiDrawer-paper': {
+        '& .MuiDrawer-paper': (theme) => ({
           width: drawerWidth,
           boxSizing: 'border-box',
-          background: 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: alpha(theme.palette.background.paper, 0.96),
           backdropFilter: 'blur(10px)',
-          color: '#333',
+          color: theme.palette.text.primary,
           border: 'none',
-          boxShadow: '4px 0 20px rgba(0,0,0,0.2)',
-        },
+          boxShadow: theme.shadows[4],
+        }),
       }}
     >
       {/* Header */}
       <Toolbar 
         sx={{ 
-          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+          background: (theme) =>
+            `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
           minHeight: '80px !important',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
           py: 2
         }}
       >
@@ -117,24 +119,25 @@ const Sidebar = () => {
       </Toolbar>
 
       {/* User Profile Section */}
-      <Box sx={{ p: 2, borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+      <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar 
             src={avatarUrl || undefined}
             sx={{ 
               width: 48, 
               height: 48,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.35)}`,
             }}
           >
             {userName.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#333' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {userName}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#666' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {userRole === 'admin' ? 'System Administrator' : 'Job Employer'}
             </Typography>
           </Box>
@@ -146,21 +149,21 @@ const Sidebar = () => {
         <List component="nav" sx={{ px: 2 }}>
           {navItems.map((item, index) => (
             item.isDivider ? 
-            <Divider key={index} sx={{ 
+            <Divider key={index} sx={(theme) => ({ 
               my: 2, 
-              borderColor: 'rgba(0, 0, 0, 0.12)',
+              borderColor: theme.palette.divider,
               '&::before': {
                 content: '""',
                 display: 'block',
                 height: '1px',
-                background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent)',
+                background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.3)}, transparent)`,
               }
-            }}>
+            })}>
               {item.text && (
                 <Typography 
                   variant="caption" 
                   sx={{ 
-                    color: '#667eea', 
+                    color: 'primary.main', 
                     px: 2,
                     fontWeight: 600,
                     letterSpacing: 1,
@@ -177,36 +180,36 @@ const Sidebar = () => {
               component={Link}
               to={item.path}
               selected={location.pathname === item.path}
-              sx={{
+              sx={(theme) => ({
                 py: 1.5,
                 px: 2.5,
                 mb: 1,
                 borderRadius: 2,
-                color: location.pathname === item.path ? '#ffffff' : '#333',
+                color: location.pathname === item.path ? theme.palette.common.white : theme.palette.text.primary,
                 background: location.pathname === item.path 
-                  ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                  ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})` 
                   : 'transparent',
                 backdropFilter: location.pathname === item.path ? 'blur(10px)' : 'none',
                 border: location.pathname === item.path 
-                  ? '1px solid rgba(255,255,255,0.3)' 
+                  ? `1px solid ${alpha(theme.palette.common.white, 0.3)}` 
                   : '1px solid transparent',
                 transition: 'all 0.3s ease',
                 '&:hover': { 
                   background: location.pathname === item.path 
-                    ? 'linear-gradient(135deg, #5a6fd8, #6a4c93)'
-                    : 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+                    ? `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`
+                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.12)})`,
                   transform: 'translateX(4px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  boxShadow: theme.shadows[2],
                 },
                 '&.Mui-selected': {
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  boxShadow: theme.shadows[4],
                 },
                 '&.Mui-selected .MuiListItemIcon-root': {
-                  color: '#ffffff',
+                  color: theme.palette.common.white,
                 },
                 '& .MuiListItemIcon-root': {
-                  color: location.pathname === item.path ? '#ffffff' : '#667eea',
+                  color: location.pathname === item.path ? theme.palette.common.white : theme.palette.primary.main,
                   minWidth: 40,
                   transition: 'color 0.3s ease',
                 },
@@ -214,7 +217,7 @@ const Sidebar = () => {
                   fontWeight: location.pathname === item.path ? 600 : 500,
                   transition: 'font-weight 0.3s ease',
                 },
-              }}
+              })}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
@@ -224,11 +227,11 @@ const Sidebar = () => {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+      <Box sx={{ p: 2, borderTop: (theme) => `1px solid ${theme.palette.divider}` }}>
         <Typography 
           variant="caption" 
           sx={{ 
-            color: '#666',
+            color: 'text.secondary',
             textAlign: 'center',
             display: 'block',
             fontSize: '0.7rem',

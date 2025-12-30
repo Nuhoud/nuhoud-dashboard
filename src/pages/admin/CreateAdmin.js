@@ -45,11 +45,11 @@ const CreateAdmin = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 600, color: '#1976d2', mb: 3 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
         Create New Admin
       </Typography>
       
-      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', maxWidth: 600 }}>
+      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: (theme) => theme.shadows[3], maxWidth: 600 }}>
         <Box component="form" onSubmit={handleSubmit}>
           <TextField 
             label="Identifier (Email)" 
@@ -91,8 +91,12 @@ const CreateAdmin = () => {
             sx={{ 
               mt: 2,
               borderRadius: 2,
-              background: 'linear-gradient(135deg, #1976d2, #42a5f5)',
-              '&:hover': { background: 'linear-gradient(135deg, #1565c0, #1976d2)' }
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              '&:hover': { 
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})` 
+              }
             }}
           >
             Create Admin

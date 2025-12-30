@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeProvider, CssBaseline } from '@mui/material';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { NotificationProvider } from './context/NotificationsContext';
+import theme from './theme';
 
 // Admin Routes
 import Dashboard from './pages/admin/Dashboard';
@@ -27,32 +28,10 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-  },
-});
-
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <NotificationProvider>
         <Router>
           <Routes>

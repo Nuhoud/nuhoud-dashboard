@@ -20,6 +20,7 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -293,7 +294,7 @@ const Profile = () => {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#667eea', mb: 3 }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: 'primary.main', mb: 3 }}>
         Profile Settings
       </Typography>
 
@@ -301,14 +302,14 @@ const Profile = () => {
         {/* Profile Header */}
         <Grid item xs={12}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 4,
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: theme.palette.background.paper,
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              boxShadow: theme.shadows[3],
               textAlign: 'center'
-            }}
+            })}
           >
             <Avatar
               src={photoPreviewUrl || profilePhotoUrl || undefined}
@@ -317,9 +318,10 @@ const Profile = () => {
                 height: 120,
                 mx: 'auto',
                 mb: 2,
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 fontSize: '3rem',
-                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+                boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.primary.main, 0.25)}`
               }}
             >
               {formData.name?.charAt(0) || 'U'}
@@ -368,7 +370,7 @@ const Profile = () => {
                 Selected: {selectedPhoto.name}
               </Typography>
             )}
-            <Typography variant="h5" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="h5" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               {formData.name || 'User Name'}
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -381,12 +383,12 @@ const Profile = () => {
             )}
             <Chip
               label={userRole === 'employer' ? 'Employer' : 'User'}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              sx={(theme) => ({
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 color: 'white',
                 fontWeight: 500,
                 px: 2
-              }}
+              })}
             />
           </Paper>
         </Grid>
@@ -394,16 +396,16 @@ const Profile = () => {
         {/* Profile Form */}
         <Grid item xs={12} lg={8}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 4,
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: theme.palette.background.paper,
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-            }}
+              boxShadow: theme.shadows[3]
+            })}
           >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" fontWeight={600} sx={{ color: '#667eea' }}>
+              <Typography variant="h6" fontWeight={600} sx={{ color: 'primary.main' }}>
                 Personal Information
               </Typography>
               <Box>
@@ -414,7 +416,7 @@ const Profile = () => {
                   disabled={loading}
                   sx={{
                     color: '#fff',
-                    '&:hover': { backgroundColor: '#4a148c' },
+                    '&:hover': { backgroundColor: 'primary.dark' },
                     mr: 1
                   }}
                 >
@@ -470,7 +472,7 @@ const Profile = () => {
               {userRole === 'employer' && (
                 <>
                   <Grid item xs={12}>
-                    <Typography variant="h6" fontWeight={600} sx={{ color: '#667eea', mt: 2, mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600} sx={{ color: 'primary.main', mt: 2, mb: 2 }}>
                       Company Information
                     </Typography>
                   </Grid>
@@ -553,23 +555,27 @@ const Profile = () => {
         {/* Job Statistics */}
         <Grid item xs={12} lg={4}>
           <Paper
-            sx={{
+            sx={(theme) => ({
               p: 3,
               borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: theme.palette.background.paper,
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              boxShadow: theme.shadows[3],
               height: 'fit-content'
-            }}
+            })}
           >
-            <Typography variant="h6" fontWeight={600} sx={{ color: '#667eea', mb: 3 }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: 'primary.main', mb: 3 }}>
               Job Statistics
             </Typography>
             
             <Box sx={{ space: 2 }}>
-              <Card sx={{ mb: 2, background: 'rgba(102, 126, 234, 0.05)', border: '1px solid rgba(102, 126, 234, 0.1)' }}>
+              <Card sx={(theme) => ({
+                mb: 2,
+                backgroundColor: alpha(theme.palette.primary.main, 0.06),
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`
+              })}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#667eea' }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: 'primary.main' }}>
                     {formData.totalJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -578,9 +584,13 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              <Card sx={{ mb: 2, background: 'rgba(118, 75, 162, 0.05)', border: '1px solid rgba(118, 75, 162, 0.1)' }}>
+              <Card sx={(theme) => ({
+                mb: 2,
+                backgroundColor: alpha(theme.palette.secondary.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.secondary.main, 0.16)}`
+              })}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#764ba2' }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: 'secondary.main' }}>
                     {formData.activeJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -589,9 +599,13 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              <Card sx={{ mb: 2, background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+              <Card sx={(theme) => ({
+                mb: 2,
+                backgroundColor: alpha(theme.palette.error.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.error.main, 0.16)}`
+              })}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#ef4444' }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: 'error.main' }}>
                     {formData.closedJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -600,9 +614,13 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              <Card sx={{ mb: 2, background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+              <Card sx={(theme) => ({
+                mb: 2,
+                backgroundColor: alpha(theme.palette.warning.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.warning.main, 0.16)}`
+              })}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#f59e0b' }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: 'warning.main' }}>
                     {formData.expiredJobs}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -611,9 +629,13 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              <Card sx={{ mb: 2, background: 'rgba(54, 179, 126, 0.05)', border: '1px solid rgba(54, 179, 126, 0.1)' }}>
+              <Card sx={(theme) => ({
+                mb: 2,
+                backgroundColor: alpha(theme.palette.success.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.success.main, 0.16)}`
+              })}>
                 <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" fontWeight={700} sx={{ color: '#36b37e' }}>
+                  <Typography variant="h4" fontWeight={700} sx={{ color: 'success.main' }}>
                     {formData.totalApplications}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">

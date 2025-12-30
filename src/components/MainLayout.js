@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, CssBaseline } from '@mui/material';
+import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -10,7 +10,6 @@ const MainLayout = () => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <CssBaseline />
       <Sidebar />
       <Box 
         component="main" 
@@ -18,7 +17,7 @@ const MainLayout = () => {
           flexGrow: 1, 
           display: 'flex', 
           flexDirection: 'column',
-          background: '#f8fafc',
+          backgroundColor: (theme) => theme.palette.background.default,
           minHeight: '100vh',
         }}
       >

@@ -114,7 +114,7 @@ const JobApplications = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+      <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
         Job Applications
       </Typography>
 

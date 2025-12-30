@@ -25,6 +25,7 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { getJobApplications } from '../../services/api';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -136,7 +137,7 @@ const Applicants = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: '#1976d2' }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
           Job Applicants ({total})
         </Typography>
         <Button
@@ -158,18 +159,18 @@ const Applicants = () => {
           <CircularProgress size={60} />
         </Box>
       ) : (
-        <Paper sx={{ p: 0, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+        <Paper sx={{ p: 0, borderRadius: 3, boxShadow: (theme) => theme.shadows[3] }}>
           <TableContainer>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Email</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Phone</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Location</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Status</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Applied Date</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Actions</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Phone</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Location</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Applied Date</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'action.hover' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -189,11 +190,11 @@ const Applicants = () => {
                     return (
                       <TableRow 
                         key={app._id || app.id || index}
-                        sx={{ '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.04)' } }}
+                        sx={{ '&:hover': { backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04) } }}
                       >
                         <TableCell>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: '#1976d2' }}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
                               {(userSnap.name && userSnap.name[0]?.toUpperCase()) || '?'}
                             </Avatar>
                             <Typography variant="body2" fontWeight="medium">
@@ -237,11 +238,11 @@ const Applicants = () => {
                             onClick={() => handleViewProfile(app)}
                             sx={{
                               borderRadius: 2,
-                              borderColor: '#1976d2',
-                              color: '#1976d2',
+                              borderColor: 'primary.main',
+                              color: 'primary.main',
                               '&:hover': {
-                                borderColor: '#1565c0',
-                                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                                borderColor: 'primary.dark',
+                                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
                               }
                             }}
                           >
@@ -266,8 +267,8 @@ const Applicants = () => {
               onRowsPerPageChange={handleChangeRowsPerPage}
               rowsPerPageOptions={[5, 10, 25, 50]}
               sx={{
-                borderTop: '1px solid #e0e0e0',
-                backgroundColor: '#fafafa'
+                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                backgroundColor: 'background.default'
               }}
             />
           )}
@@ -284,7 +285,7 @@ const Applicants = () => {
           sx: { borderRadius: 3 }
         }}
       >
-        <DialogTitle sx={{ backgroundColor: '#f5f5f5', fontWeight: 600 }}>
+        <DialogTitle sx={{ backgroundColor: 'action.hover', fontWeight: 600 }}>
           Applicant Profile
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
@@ -295,7 +296,7 @@ const Applicants = () => {
                 <Grid item xs={12} md={6}>
                   <Card sx={{ height: '100%', borderRadius: 2 }}>
                     <CardContent>
-                      <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                         Personal Information
                       </Typography>
                       <Box sx={{ mb: 2 }}>
@@ -335,7 +336,7 @@ const Applicants = () => {
                 <Grid item xs={12} md={6}>
                   <Card sx={{ height: '100%', borderRadius: 2 }}>
                     <CardContent>
-                      <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                         Professional Information
                       </Typography>
                       
@@ -345,7 +346,7 @@ const Applicants = () => {
                       </Typography>
                       {(selectedApplicant.userSnap?.education || []).length > 0 ? (
                         (selectedApplicant.userSnap.education || []).map((edu, idx) => (
-                          <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                          <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: 'action.hover', borderRadius: 1 }}>
                             <Typography variant="body2" fontWeight={500}>
                               {edu.degree} in {edu.field}
                             </Typography>
@@ -371,7 +372,7 @@ const Applicants = () => {
                       </Typography>
                       {(selectedApplicant.userSnap?.experiences || []).length > 0 ? (
                         (selectedApplicant.userSnap.experiences || []).map((exp, idx) => (
-                          <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                          <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: 'action.hover', borderRadius: 1 }}>
                             <Typography variant="body2" fontWeight={500}>
                               {exp.jobTitle} at {exp.company}
                             </Typography>
@@ -404,7 +405,7 @@ const Applicants = () => {
                       <Grid container spacing={3}>
                         {/* Skills */}
                         <Grid item xs={12} md={6}>
-                          <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                             Skills
                           </Typography>
                           
@@ -455,12 +456,12 @@ const Applicants = () => {
 
                         {/* Certifications */}
                         <Grid item xs={12} md={6}>
-                          <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                             Certifications
                           </Typography>
                           {(selectedApplicant.userSnap?.certifications || []).length > 0 ? (
                             (selectedApplicant.userSnap.certifications || []).map((cert, idx) => (
-                              <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: '#f9f9f9', borderRadius: 1 }}>
+                              <Box key={idx} sx={{ mb: 2, p: 2, backgroundColor: 'action.hover', borderRadius: 1 }}>
                                 <Typography variant="body2" fontWeight={500}>
                                   {cert.name}
                                 </Typography>
@@ -489,7 +490,7 @@ const Applicants = () => {
                     <CardContent>
                       <Grid container spacing={3}>
                         <Grid item xs={12} md={6}>
-                          <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                             Job Preferences
                           </Typography>
                           <Typography variant="body2" sx={{ mb: 1 }}>
@@ -504,7 +505,7 @@ const Applicants = () => {
                         </Grid>
                         
                         <Grid item xs={12} md={6}>
-                          <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+                          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                             Goals & Interests
                           </Typography>
                           <Typography variant="body2" sx={{ mb: 2 }}>
@@ -537,7 +538,7 @@ const Applicants = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, backgroundColor: '#f5f5f5' }}>
+        <DialogActions sx={{ p: 3, backgroundColor: 'action.hover' }}>
           <Button onClick={handleCloseProfile} variant="contained" sx={{ borderRadius: 2 }}>
             Close
           </Button>

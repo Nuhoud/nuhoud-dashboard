@@ -13,6 +13,7 @@ import {
   IconButton,
   Alert,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { login } from '../services/api';
 import jwtDecode from 'jwt-decode';
 import config from '../config/environment';
@@ -123,30 +124,31 @@ const Login = () => {
   };
 
   return (
-    <Box sx={{
+    <Box sx={(theme) => ({
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       py: 4,
       px: 2
-    }}>
+    })}>
       <Container maxWidth="sm">
-        <Paper sx={{ 
+        <Paper sx={(theme) => ({ 
           p: { xs: 3, sm: 4 }, 
           borderRadius: 4, 
-          boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          background: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: theme.shadows[4],
+          backgroundColor: alpha(theme.palette.background.paper, 0.96),
           backdropFilter: 'blur(10px)'
-        }}>
+        })}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography 
               component="h1" 
               variant="h3" 
               sx={{ 
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -161,7 +163,7 @@ const Login = () => {
               component="h2" 
               variant="h6" 
               sx={{ 
-                color: '#666',
+                color: 'text.secondary',
                 fontWeight: 400,
                 fontSize: { xs: '1rem', sm: '1.1rem' }
               }}
@@ -184,17 +186,17 @@ const Login = () => {
                   py: 1.5,
                   fontWeight: 600,
                   fontSize: { xs: '0.9rem', sm: '1rem' },
-                  border: '2px solid #e0e0e0',
+                  border: (theme) => `2px solid ${theme.palette.divider}`,
                   '&.Mui-selected': {
-                    backgroundColor: '#667eea',
+                    backgroundColor: (theme) => theme.palette.primary.main,
                     color: 'white',
-                    borderColor: '#667eea',
+                    borderColor: (theme) => theme.palette.primary.main,
                     '&:hover': {
-                      backgroundColor: '#5a6fd8',
+                      backgroundColor: (theme) => theme.palette.primary.dark,
                     }
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
                   }
                 }
               }}
@@ -225,7 +227,7 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <EmailIcon sx={{ color: '#667eea' }} />
+                    <EmailIcon sx={{ color: 'primary.main' }} />
                   </InputAdornment>
                 ),
               }}
@@ -244,7 +246,7 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ color: '#667eea' }} />
+                    <LockIcon sx={{ color: 'primary.main' }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -278,9 +280,11 @@ const Login = () => {
                 borderRadius: 2,
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a6fd8, #6a4c93)',
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
                 }
               }}
             >

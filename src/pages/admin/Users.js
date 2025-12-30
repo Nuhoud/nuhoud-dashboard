@@ -230,10 +230,10 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ color: '#667eea', fontWeight: 600 }}>User Details</DialogTitle>
+      <DialogTitle sx={{ color: 'primary.main', fontWeight: 600 }}>User Details</DialogTitle>
       <DialogContent dividers>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <Avatar src={avatarUrl || undefined} sx={{ width: 64, height: 64, bgcolor: '#667eea' }}>
+          <Avatar src={avatarUrl || undefined} sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
             {(user.name || 'U').charAt(0).toUpperCase()}
           </Avatar>
           <Box>
@@ -247,11 +247,11 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
               <Chip
                 label={(user.role || 'user').charAt(0).toUpperCase() + (user.role || 'user').slice(1)}
                 size="small"
-                sx={{
-                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                sx={(theme) => ({
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                   color: 'white',
                   fontWeight: 500
-                }}
+                })}
               />
               <Typography variant="caption" color="text.secondary">
                 Created: {createdAt}
@@ -267,7 +267,7 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Basic
             </Typography>
             {renderKeyValue('Gender', basic.gender)}
@@ -279,37 +279,37 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
             )}
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Goals
             </Typography>
             {renderObjectGrid(goals)}
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Job Preferences
             </Typography>
             {renderObjectGrid(jobPreferences)}
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Education
             </Typography>
             {renderList(education, renderEducationItem)}
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Experiences
             </Typography>
             {renderList(experiences, renderExperienceItem)}
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Certifications
             </Typography>
             {renderSimpleList(certifications)}
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#667eea', mb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
               Skills
             </Typography>
             <Box sx={{ mb: 1.5 }}>
@@ -476,22 +476,22 @@ const Users = () => {
           roleValue = 'user';
         }
         return (
-          <Chip
-            label={roleValue.charAt(0).toUpperCase() + roleValue.slice(1)}
-            color={roleValue === 'admin' ? 'primary' : roleValue === 'employer' ? 'secondary' : 'default'}
-            size="small"
-            sx={{
-              background: roleValue === 'admin'
-                ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                : roleValue === 'employer'
-                  ? 'linear-gradient(135deg, #764ba2, #667eea)'
-                  : 'linear-gradient(135deg, #bdbdbd, #757575)',
-              color: 'white',
-              fontWeight: 500
-            }}
-          />
-        );
-      },
+            <Chip
+              label={roleValue.charAt(0).toUpperCase() + roleValue.slice(1)}
+              color={roleValue === 'admin' ? 'primary' : roleValue === 'employer' ? 'secondary' : 'default'}
+              size="small"
+              sx={(theme) => ({
+                background: roleValue === 'admin'
+                  ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+                  : roleValue === 'employer'
+                    ? `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`
+                    : `linear-gradient(135deg, ${theme.palette.info.main}, ${theme.palette.info.dark})`,
+                color: roleValue === 'user' ? theme.palette.text.primary : 'white',
+                fontWeight: 500
+              })}
+            />
+          );
+        },
     },
     {
       field: 'createdAt',
@@ -513,21 +513,21 @@ const Users = () => {
             <IconButton
               size="small"
               onClick={() => handleViewDetails(params.row)}
-              sx={{ color: '#667eea' }}
+              sx={{ color: 'primary.main' }}
             >
               <VisibilityIcon />
             </IconButton>
             <IconButton
               size="small"
               onClick={() => handleEditClick(params.row)}
-              sx={{ color: '#667eea' }}
+              sx={{ color: 'primary.main' }}
             >
               <EditIcon />
             </IconButton>
             <IconButton
               size="small"
               onClick={() => handleDeleteClick(params.row)}
-              sx={{ color: '#ff5630' }}
+              sx={{ color: 'error.main' }}
             >
               <DeleteIcon />
             </IconButton>
@@ -540,7 +540,7 @@ const Users = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight={700} sx={{ color: '#667eea' }}>
+        <Typography variant="h4" fontWeight={700} sx={{ color: 'primary.main' }}>
           Users Management
         </Typography>
         <Button
@@ -550,22 +550,28 @@ const Users = () => {
             setEditingUser({ name: '', email: '', role: 'employer' });
             setIsCreateDialogOpen(true);
           }}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+          sx={(theme) => ({
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             color: 'white',
             borderRadius: 2,
             px: 3,
             py: 1,
             '&:hover': {
-              background: 'linear-gradient(135deg, #5a6fd8, #6a4190)',
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
             }
-          }}
+          })}
         >
           Add User
         </Button>
       </Box>
 
-      <Paper sx={{ p: 3, borderRadius: 4, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+      <Paper sx={(theme) => ({
+        p: 3,
+        borderRadius: 4,
+        backgroundColor: theme.palette.background.paper,
+        backdropFilter: 'blur(10px)',
+        boxShadow: theme.shadows[2],
+      })}>
         <Box sx={{ mb: 3 }}>
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>Filter by Role</InputLabel>
@@ -592,26 +598,13 @@ const Users = () => {
           pageSizeOptions={[10, 25, 50]}
           disableRowSelectionOnClick
           getRowId={(row) => row._id || row.id}
-          sx={{
-            border: 'none',
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid rgba(0,0,0,0.08)',
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: 'rgba(102, 126, 234, 0.08)',
-              color: '#667eea',
-              fontWeight: 600,
-            },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'rgba(102, 126, 234, 0.04)',
-            },
-          }}
+          sx={{ border: 'none' }}
         />
       </Paper>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#667eea', fontWeight: 600 }}>Edit User</DialogTitle>
+        <DialogTitle sx={{ color: 'primary.main', fontWeight: 600 }}>Edit User</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -651,13 +644,13 @@ const Users = () => {
           <Button
             onClick={handleEditSave}
             variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            sx={(theme) => ({
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               color: 'white',
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8, #6a4190)',
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
               }
-            }}
+            })}
           >
             Save
           </Button>
@@ -666,7 +659,7 @@ const Users = () => {
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#667eea', fontWeight: 600 }}>Create New User</DialogTitle>
+        <DialogTitle sx={{ color: 'primary.main', fontWeight: 600 }}>Create New User</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
@@ -706,13 +699,13 @@ const Users = () => {
           <Button
             onClick={handleCreateSave}
             variant="contained"
-            sx={{
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            sx={(theme) => ({
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               color: 'white',
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8, #6a4190)',
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
               }
-            }}
+            })}
           >
             Create
           </Button>

@@ -16,23 +16,24 @@ const NotFound = () => {
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%)',
-      }}
+        background: `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.info.light} 100%)`,
+      })}
     >
       <Container maxWidth="sm">
         <Paper
-          sx={{
+          sx={(theme) => ({
             p: 4,
             borderRadius: 4,
             textAlign: 'center',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
-          }}
+            boxShadow: theme.shadows[3],
+            backgroundColor: theme.palette.background.paper,
+          })}
         >
-          <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, color: '#667eea' }}>
+          <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
             404
           </Typography>
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
@@ -45,15 +46,15 @@ const NotFound = () => {
             component={RouterLink}
             to={homePath}
             variant="contained"
-            sx={{
+            sx={(theme) => ({
               px: 4,
               py: 1.25,
               borderRadius: 2,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8, #6a4c93)',
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
               },
-            }}
+            })}
           >
             {buttonLabel}
           </Button>

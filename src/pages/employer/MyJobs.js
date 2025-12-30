@@ -177,17 +177,19 @@ const MyJobs = () => {
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ color: '#1976d2', fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ color: 'primary.main', fontWeight: 600 }}>
           My Job Offers
         </Typography>
         <Button
           variant="contained"
           onClick={() => navigate('/employer/jobs/create')}
-          sx={{
+          sx={(theme) => ({
             borderRadius: 2,
-            background: 'linear-gradient(135deg, #1976d2, #42a5f5)',
-            '&:hover': { background: 'linear-gradient(135deg, #1565c0, #1976d2)' }
-          }}
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            '&:hover': { 
+              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`
+            }
+          })}
         >
           Create New Job
         </Button>

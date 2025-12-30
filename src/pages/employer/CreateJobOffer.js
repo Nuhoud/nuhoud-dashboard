@@ -4,6 +4,7 @@ import {
   Box, Paper, Typography, Grid, TextField, Button, MenuItem,
   Select, InputLabel, FormControl, Chip, IconButton, Alert, Snackbar
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { createJobOffer } from '../../services/api';
 
@@ -124,11 +125,11 @@ const CreateJobOffer = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 600, color: '#1976d2', mb: 3 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
         Create a Job Offer
       </Typography>
       
-      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+      <Paper sx={{ p: 4, borderRadius: 3, boxShadow: (theme) => theme.shadows[3] }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Core Details */}
@@ -226,7 +227,7 @@ const CreateJobOffer = () => {
 
             {/* Salary */}
             <Grid item xs={12}>
-              <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 600 }}>
+              <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
                 Salary Range
               </Typography>
             </Grid>
@@ -290,7 +291,7 @@ const CreateJobOffer = () => {
 
             {/* Requirements */}
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                 Requirements
               </Typography>
               <Box display="flex" alignItems="center" mb={1}>
@@ -303,7 +304,7 @@ const CreateJobOffer = () => {
                 />
                 <IconButton 
                   onClick={() => handleAddItem('requirement')}
-                  sx={{ ml: 1, color: '#1976d2' }}
+                  sx={{ ml: 1, color: 'primary.main' }}
                 >
                   <AddCircleOutlineIcon />
                 </IconButton>
@@ -314,7 +315,7 @@ const CreateJobOffer = () => {
                     key={r} 
                     label={r} 
                     onDelete={() => handleDeleteItem('requirement', r)}
-                    sx={{ bgcolor: 'rgba(25, 118, 210, 0.1)' }}
+                    sx={(theme) => ({ bgcolor: alpha(theme.palette.primary.main, 0.12) })}
                   />
                 ))}
               </Box>
@@ -327,7 +328,7 @@ const CreateJobOffer = () => {
 
             {/* Skills */}
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 600 }}>
+              <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
                 Skills Required
               </Typography>
               <Box display="flex" alignItems="center" mb={1}>
@@ -340,7 +341,7 @@ const CreateJobOffer = () => {
                 />
                 <IconButton 
                   onClick={() => handleAddItem('skill')}
-                  sx={{ ml: 1, color: '#1976d2' }}
+                  sx={{ ml: 1, color: 'primary.main' }}
                 >
                   <AddCircleOutlineIcon />
                 </IconButton>
@@ -351,7 +352,7 @@ const CreateJobOffer = () => {
                     key={s} 
                     label={s} 
                     onDelete={() => handleDeleteItem('skill', s)}
-                    sx={{ bgcolor: 'rgba(25, 118, 210, 0.1)' }}
+                    sx={(theme) => ({ bgcolor: alpha(theme.palette.primary.main, 0.12) })}
                   />
                 ))}
               </Box>
@@ -389,8 +390,12 @@ const CreateJobOffer = () => {
               disabled={loading}
               sx={{ 
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, #1976d2, #42a5f5)',
-                '&:hover': { background: 'linear-gradient(135deg, #1565c0, #1976d2)' }
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                '&:hover': { 
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})` 
+                }
               }}
             >
               {loading ? 'Creating...' : 'Create Job Offer'}

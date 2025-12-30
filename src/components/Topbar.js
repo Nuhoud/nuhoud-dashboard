@@ -15,6 +15,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Notifications as NotificationsIcon,
   AccountCircle,
@@ -87,12 +88,12 @@ const Topbar = () => {
     <AppBar
       position="static"
       elevation={0}
-      sx={{
-        background: 'rgba(255, 255, 255, 0.95)',
+      sx={(theme) => ({
+        backgroundColor: alpha(theme.palette.background.paper, 0.92),
         backdropFilter: 'blur(10px)',
-        color: '#333',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
-      }}
+        color: theme.palette.text.primary,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+      })}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3 } }}>
         {/* Left side - Page title and breadcrumb */}
@@ -101,7 +102,8 @@ const Topbar = () => {
             variant="h5"
             sx={{
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -116,8 +118,9 @@ const Topbar = () => {
               label={userRole === 'admin' ? 'Administrator' : 'Employer'}
               size="small"
               sx={{
-                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                color: '#ffffff',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                color: 'white',
                 fontWeight: 600,
                 fontSize: '0.7rem',
               }}
@@ -131,13 +134,13 @@ const Topbar = () => {
           {!isMobile && (
             <Tooltip title="Search">
               <IconButton
-                sx={{
-                  color: '#666',
+                sx={(theme) => ({
+                  color: theme.palette.text.secondary,
                   '&:hover': {
-                    background: 'rgba(102, 126, 234, 0.1)',
-                    color: '#667eea',
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    color: theme.palette.primary.main,
                   },
-                }}
+                })}
               >
                 <SearchIcon />
               </IconButton>
@@ -148,13 +151,13 @@ const Topbar = () => {
           <Tooltip title="Notifications">
             <IconButton
               onClick={handleNotificationMenuOpen}
-              sx={{
-              color: '#666',
-              '&:hover': {
-                background: 'rgba(102, 126, 234, 0.1)',
-                color: '#667eea',
-              },
-            }}
+              sx={(theme) => ({
+                color: theme.palette.text.secondary,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                  color: theme.palette.primary.main,
+                },
+              })}
           >
             <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon />
@@ -166,10 +169,10 @@ const Topbar = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
             {!isMobile && (
               <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#333' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                   {userName}
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#666' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {userEmail}
                 </Typography>
               </Box>
@@ -177,21 +180,22 @@ const Topbar = () => {
             <Tooltip title="Account settings">
               <IconButton
                 onClick={handleProfileMenuOpen}
-                sx={{
+                sx={(theme) => ({
                   p: 0.5,
                   border: '2px solid transparent',
                   '&:hover': {
-                    border: '2px solid #667eea',
-                    background: 'rgba(102, 126, 234, 0.1)',
+                    border: `2px solid ${theme.palette.primary.main}`,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
                   },
-                }}
+                })}
               >
                 <Avatar
                   src={avatarUrl || undefined}
                   sx={{
                     width: 40,
                     height: 40,
-                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                     fontWeight: 600,
                     fontSize: '1rem',
                   }}
@@ -214,14 +218,14 @@ const Topbar = () => {
             mt: 1,
             minWidth: 320,
             maxWidth: 400,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            boxShadow: (theme) => theme.shadows[3],
             borderRadius: 2,
           },
         }}
       >
         {notifications.length === 0 && (
           <MenuItem sx={{ py: 2 }}>
-            <Typography variant="body2" sx={{ color: '#666' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               No notifications yet
             </Typography>
           </MenuItem>
@@ -231,7 +235,7 @@ const Topbar = () => {
             {idx > 0 && <Divider />}
             <MenuItem sx={{ py: 2, alignItems: 'flex-start' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#667eea' }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
                   <NotificationsIcon sx={{ fontSize: 16 }} />
                 </Avatar>
                 <Box>
@@ -239,11 +243,11 @@ const Topbar = () => {
                     {notification.title}
                   </Typography>
                   {notification.body && (
-                    <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
                       {notification.body}
                     </Typography>
                   )}
-                  <Typography variant="caption" sx={{ color: '#999' }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {new Date(notification.receivedAt).toLocaleTimeString()}
                   </Typography>
                 </Box>
@@ -262,21 +266,21 @@ const Topbar = () => {
           sx: {
             mt: 1,
             minWidth: 200,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            boxShadow: (theme) => theme.shadows[3],
             borderRadius: 2,
           },
         }}
       >
         <MenuItem onClick={handleMenuClose} sx={{ py: 2 }}>
-          <AccountCircle sx={{ mr: 2, color: '#667eea' }} />
+          <AccountCircle sx={{ mr: 2, color: 'primary.main' }} />
           <Typography>Profile</Typography>
         </MenuItem>
         <MenuItem onClick={handleMenuClose} sx={{ py: 2 }}>
-          <Settings sx={{ mr: 2, color: '#667eea' }} />
+          <Settings sx={{ mr: 2, color: 'primary.main' }} />
           <Typography>Settings</Typography>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleLogout} sx={{ py: 2, color: '#e53e3e' }}>
+        <MenuItem onClick={handleLogout} sx={{ py: 2, color: 'error.main' }}>
           <Logout sx={{ mr: 2 }} />
           <Typography>Logout</Typography>
         </MenuItem>
