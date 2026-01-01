@@ -24,6 +24,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import logo from '../assets/logo-nuhoud2.svg';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -160,22 +161,12 @@ const Login = () => {
           backdropFilter: 'blur(10px)'
         })}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography 
-              component="h1" 
-              variant="h3" 
-              sx={{ 
-                fontWeight: 700,
-                background: (theme) =>
-                  `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1,
-                fontSize: { xs: '2rem', sm: '2.5rem' }
-              }}
-            >
-              NUHOUD Platform
-            </Typography>
+            <Box
+              component="img"
+              src={logo}
+              alt="Nuhoud logo"
+              sx={{ height: 115, mb: 1 }}
+            />
             
             <Typography 
               component="h2" 
@@ -198,6 +189,7 @@ const Login = () => {
               onChange={handleRoleChange}
               aria-label="role selection"
               sx={{
+                gap: 1.5,
                 '& .MuiToggleButton-root': {
                   borderRadius: 3,
                   px: { xs: 2, sm: 4 },
