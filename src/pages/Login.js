@@ -116,15 +116,16 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err); // For debugging
-      // Handle different error response formats
-      const errorMessage = 
-        (err.response?.data?.message) || 
-        (typeof err.response?.data === 'string' ? err.response.data : null) ||
-        (typeof err.response?.data?.error === 'string' ? err.response.data.error : null) ||
+      const data = err.response?.data;
+      let errorMessage =
+        (typeof data?.message === 'string' && data.message) ||
+        (Array.isArray(data?.message) && data.message.join(', ')) ||
+        (typeof data === 'string' && data) ||
+        (typeof data?.error === 'string' && data.error) ||
+        err.message ||
         'Invalid credentials';
-      
-      // Ensure we're setting a string, not an object
-      setError(String(errorMessage));
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
