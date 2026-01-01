@@ -389,6 +389,31 @@ export const uploadProfilePhoto = async (file) => {
   return response.data;
 };
 
+// --- Password Reset Flow ---
+export const requestResetPassword = async (identifier, isMobile = false) => {
+  const response = await apiMain.post(`/auth/requestResetPassword?isMobile=${isMobile}`, {
+    identifier,
+  });
+  return response.data;
+};
+
+export const verifyResetPasswordOtp = async (identifier, otp, isMobile = false) => {
+  const response = await apiMain.post(`/auth/verifyResetPasswordOtp?isMobile=${isMobile}`, {
+    identifier,
+    otp,
+  });
+  return response.data;
+};
+
+export const resetPassword = async (newPassword, tokenOverride = null) => {
+  // Requires auth token per backend (resetPassword is guarded)
+  const headers = tokenOverride
+    ? { Authorization: `Bearer ${tokenOverride}` }
+    : getAuthHeaders();
+  const response = await apiMain.post('/auth/resetPassword', { newPassword }, { headers });
+  return response.data;
+};
+
 // --- Utility functions ---
 export const isAuthenticated = () => {
   return !!localStorage.getItem('token');
