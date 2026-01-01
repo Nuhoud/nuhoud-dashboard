@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography, Box, Alert, Paper } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { login } from '../../services/api';
+import { getMyProfile, login } from '../../services/api';
 import jwtDecode from 'jwt-decode';
 import logo from '../../assets/logo-nuhoud.svg';
 
@@ -38,6 +38,24 @@ const EmployerLogin = () => {
       localStorage.setItem('userEmail', decodedToken.identifier || identifier);
       if (decodedToken.company) {
         localStorage.setItem('companyName', decodedToken.company);
+      }
+
+      // Fetch fresh profile details (including avatar) so they persist after re-login
+      try {
+        const profile = await getMyProfile();
+        const avatarUrl = profile?.photo || profile?.avatar || profile?.avatarUrl || profile?.image || profile?.url || '';
+        if (profile?.name) {
+          localStorage.setItem('userName', profile.name);
+        }
+        if (profile?.email) {
+          localStorage.setItem('userEmail', profile.email);
+        }
+        if (avatarUrl) {
+          localStorage.setItem('userAvatar', avatarUrl);
+          window.dispatchEvent(new Event('profile-avatar-updated'));
+        }
+      } catch (profileErr) {
+        console.error('Failed to fetch profile after employer login:', profileErr);
       }
 
       // Navigate to dashboard

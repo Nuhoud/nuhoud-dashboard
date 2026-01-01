@@ -14,7 +14,7 @@ import {
   Alert,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { login } from '../services/api';
+import { getMyProfile, login } from '../services/api';
 import jwtDecode from 'jwt-decode';
 import config from '../config/environment';
 import { registerAndSendFcmToken } from '../fcmClient';
@@ -84,10 +84,28 @@ const Login = () => {
         console.log('Saving email to localStorage:', userEmail);
         localStorage.setItem('userEmail', userEmail);
 
+        // Hydrate profile data so avatar persists after re-login
+        try {
+          const profile = await getMyProfile();
+          const avatarUrl = profile?.photo || profile?.avatar || profile?.avatarUrl || profile?.image || profile?.url || '';
+          if (profile?.name) {
+            localStorage.setItem('userName', profile.name);
+          }
+          if (profile?.email) {
+            localStorage.setItem('userEmail', profile.email);
+          }
+          if (avatarUrl) {
+            localStorage.setItem('userAvatar', avatarUrl);
+            window.dispatchEvent(new Event('profile-avatar-updated'));
+          }
+        } catch (profileErr) {
+          console.error('Failed to fetch profile after login:', profileErr);
+        }
+
         // Register FCM and send token to backend (runs only after login)
         registerAndSendFcmToken();
         
-        if (decoded.role === 'admin') {
+        if (decoded.role === 'admin') {  
           navigate('/admin/dashboard');
         } else if (decoded.role === 'employer') {
           navigate('/employer/dashboard');

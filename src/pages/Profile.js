@@ -86,14 +86,16 @@ const Profile = () => {
   const fetchUserProfile = async () => {
     try {
       setFetchingProfile(true);
-      const [userData, stats] = await Promise.all([
+      const [userResponse, stats] = await Promise.all([
         getMyProfile(),
         getEmployerJobStatistics()
       ]);
+
+      const userData = userResponse?.data ?? userResponse ?? {};
       
-      setUserRole(userData.role);
+      setUserRole(userData.role || localStorage.getItem('userRole') || '');
       const storedAvatar = localStorage.getItem('userAvatar') || '';
-      const fetchedAvatar = userData.photo || userData.avatar || userData.avatarUrl || userData.image || storedAvatar;
+      const fetchedAvatar = userData.photo || userData.avatar || userData.avatarUrl || userData.image || userData.url || storedAvatar;
       if (fetchedAvatar && fetchedAvatar !== storedAvatar) {
         localStorage.setItem('userAvatar', fetchedAvatar);
         window.dispatchEvent(new Event('profile-avatar-updated'));
@@ -101,8 +103,8 @@ const Profile = () => {
       setProfilePhotoUrl(fetchedAvatar || '');
       setFormData(prev => ({
         ...prev,
-        name: userData.name || '',
-        email: userData.email || '',
+        name: userData.name || localStorage.getItem('userName') || '',
+        email: userData.email || localStorage.getItem('userEmail') || '',
         mobile: userData.mobile || '',
         password: '',
         company: userData.company || {
@@ -382,7 +384,7 @@ const Profile = () => {
               </Typography>
             )}
             <Chip
-              label={userRole === 'employer' ? 'Employer' : 'User'}
+              label={userRole === 'employer' ? 'Employer' : 'Admin'}
               sx={(theme) => ({
                 background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 color: 'white',

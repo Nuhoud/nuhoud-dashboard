@@ -8,7 +8,19 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMyProfile().then(res => setProfile(res.data)).finally(() => setLoading(false));
+    const loadProfile = async () => {
+      try {
+        const res = await getMyProfile();
+        // Some API responses return the user directly, others wrap it in { data }
+        setProfile(res?.data ?? res ?? null);
+      } catch (err) {
+        console.error('Failed to load profile', err);
+        setProfile(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
   }, []);
 
   if (loading) {
@@ -28,12 +40,17 @@ const Profile = () => {
       {profile && (
         <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0 8px 32px rgba(0,0,0,0.1)', maxWidth: 800 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Avatar sx={{ bgcolor: '#1976d2', width: 80, height: 80, mr: 3 }}>
-              <AccountCircleIcon sx={{ fontSize: 50 }} />
+            <Avatar
+              src={profile.photo || profile.avatar || profile.avatarUrl || profile.image || profile.url || undefined}
+              sx={{ bgcolor: '#1976d2', width: 80, height: 80, mr: 3 }}
+            >
+              {!profile.photo && !profile.avatar && !profile.avatarUrl && !profile.image && !profile.url && (
+                <AccountCircleIcon sx={{ fontSize: 50 }} />
+              )}
             </Avatar>
             <Box>
               <Typography variant="h5" fontWeight={600} sx={{ color: '#1976d2' }}>
-                {profile.name || 'No Name'}
+                {profile.name || profile.fullName || 'No Name'}
               </Typography>
               <Typography color="text.secondary" variant="h6">
                 {profile.email}

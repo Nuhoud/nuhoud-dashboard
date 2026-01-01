@@ -190,8 +190,17 @@ export const deleteUser = async (id) => {
 };
 
 export const getMyProfile = async () => {
-  const response = await apiMain.get('/users/my-profile', { headers: getAuthHeaders() });
-  return response.data;
+  try {
+    const response = await apiMain.get('/profile/my-profile', { headers: getAuthHeaders() });
+    return response.data;
+  } catch (error) {
+    // Fallback for older endpoint naming
+    if (error.response?.status === 404) {
+      const response = await apiMain.get('/users/my-profile', { headers: getAuthHeaders() });
+      return response.data;
+    }
+    throw error;
+  }
 };
 
 export const updateMyProfile = async (data) => {
