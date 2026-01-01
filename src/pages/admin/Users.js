@@ -71,176 +71,45 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
   const avatarUrl = user.url || user.avatarUrl || user.avatar || user.photo || user.image || '';
   const contact = user.email || user.mobile || user.phone || EMPTY_VALUE;
   const createdAt = formatDateTime(user.createdAt || user.created_at || user.created);
+  const isEmployer = (user.role || '').toLowerCase() === 'employer';
+  const isAdmin = (user.role || '').toLowerCase() === 'admin';
 
-  const basic = user.basic || {};
-  const education = Array.isArray(user.education) ? user.education : [];
-  const experiences = Array.isArray(user.experiences) ? user.experiences : [];
-  const certifications = Array.isArray(user.certifications)
-    ? user.certifications
-    : Array.isArray(user.certificates)
-      ? user.certificates
-      : [];
-  const goals = user.goals;
-  const jobPreferences = user.jobPreferences;
-
-  const skills = user.skills || {};
-  const technicalSkills = Array.isArray(skills.technical)
-    ? skills.technical
-    : Array.isArray(skills)
-      ? skills
-      : [];
-  const softSkills = Array.isArray(skills.soft) ? skills.soft : [];
-
-  const renderEmpty = () => (
-    <Typography variant="body2" color="text.secondary">
-      No data
-    </Typography>
-  );
-
-  const formatValue = (value) => {
-    if (value === null || value === undefined || value === '') return EMPTY_VALUE;
-    if (Array.isArray(value)) return value.length ? value.join(', ') : EMPTY_VALUE;
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
-  };
-
-  const renderKeyValue = (label, value) => (
-    <Box sx={{ mb: 1.5 }}>
+  const renderField = (label, value) => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2">{formatValue(value)}</Typography>
+      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+        {value || EMPTY_VALUE}
+      </Typography>
     </Box>
   );
 
-  const renderList = (items, renderItem) => {
-    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        {items.map((item, index) => renderItem(item, index))}
-      </Box>
-    );
-  };
-
-  const formatDateRange = (start, end) => {
-    const startText = formatDate(start);
-    const endText = end ? formatDate(end) : 'Present';
-    if (startText === EMPTY_VALUE && !end) return EMPTY_VALUE;
-    if (startText === EMPTY_VALUE && end) return endText;
-    return `${startText} - ${endText}`;
-  };
-
-  const renderEducationItem = (item, index) => {
-    const school = item?.institution || item?.school || item?.university || 'Education';
-    const degree = item?.degree || item?.field || item?.major || item?.title;
-    const dates = formatDateRange(item?.startDate || item?.from, item?.endDate || item?.to);
-    return (
-      <Box key={item?._id || item?.id || index}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-          {school}
-        </Typography>
-        {degree && <Typography variant="body2">{degree}</Typography>}
-        {dates !== EMPTY_VALUE && (
-          <Typography variant="caption" color="text.secondary">
-            {dates}
-          </Typography>
-        )}
-        {item?.description && (
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {item.description}
-          </Typography>
-        )}
-      </Box>
-    );
-  };
-
-  const renderExperienceItem = (item, index) => {
-    const title = item?.title || item?.role || item?.position || 'Experience';
-    const company = item?.company || item?.employer || item?.organization;
-    const dates = formatDateRange(item?.startDate || item?.from, item?.endDate || item?.to);
-    return (
-      <Box key={item?._id || item?.id || index}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-          {title}
-        </Typography>
-        {company && <Typography variant="body2">{company}</Typography>}
-        {dates !== EMPTY_VALUE && (
-          <Typography variant="caption" color="text.secondary">
-            {dates}
-          </Typography>
-        )}
-        {item?.description && (
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {item.description}
-          </Typography>
-        )}
-      </Box>
-    );
-  };
-
-  const renderSimpleList = (items) => {
-    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        {items.map((item, index) => (
-          <Typography key={item?._id || item?.id || index} variant="body2">
-            {formatValue(item?.name || item?.title || item)}
-          </Typography>
-        ))}
-      </Box>
-    );
-  };
-
-  const renderSkills = (items) => {
-    if (!Array.isArray(items) || items.length === 0) return renderEmpty();
-    return (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        {items.map((skill, index) => {
-          const name = skill?.name || skill?.skill || skill?.title || skill;
-          const level = skill?.level || skill?.proficiency || skill?.rating;
-          const baseLabel = name ? String(name) : formatValue(skill);
-          const label = level ? `${baseLabel} (${level})` : baseLabel;
-          return <Chip key={skill?._id || skill?.id || index} label={label} size="small" />;
-        })}
-      </Box>
-    );
-  };
-
-  const renderObjectGrid = (value) => {
-    if (!value) return renderEmpty();
-    if (Array.isArray(value)) return renderSimpleList(value);
-    if (typeof value !== 'object') {
-      return <Typography variant="body2">{String(value)}</Typography>;
-    }
-    const entries = Object.entries(value).filter(([, v]) => v !== null && v !== undefined && v !== '');
-    if (entries.length === 0) return renderEmpty();
-    return (
-      <Grid container spacing={2}>
-        {entries.map(([key, val]) => (
-          <Grid item xs={12} sm={6} key={key}>
-            <Typography variant="caption" color="text.secondary">
-              {formatLabel(key)}
-            </Typography>
-            <Typography variant="body2">{formatValue(val)}</Typography>
-          </Grid>
-        ))}
-      </Grid>
-    );
-  };
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ color: 'primary.main', fontWeight: 600 }}>User Details</DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <Avatar src={avatarUrl || undefined} sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
+      <DialogTitle sx={{ color: 'primary.main', fontWeight: 700 }}>User Details</DialogTitle>
+      <DialogContent dividers sx={{ backgroundColor: 'background.default' }}>
+        <Paper
+          variant="outlined"
+          sx={(theme) => ({
+            p: 3,
+            mb: 3,
+            borderRadius: 3,
+            borderColor: theme.palette.divider,
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}10, ${theme.palette.secondary.main}10)`
+          })}
+        >
+          <Avatar src={avatarUrl || undefined} sx={{ width: 72, height: 72, bgcolor: 'primary.main' }}>
             {(user.name || 'U').charAt(0).toUpperCase()}
           </Avatar>
-          <Box>
-            <Typography variant="h6" fontWeight={600}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>
               {user.name || 'User'}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" noWrap>
               {contact}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
@@ -250,81 +119,314 @@ const UserDetailsDialog = ({ open, onClose, user }) => {
                 sx={(theme) => ({
                   background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                   color: 'white',
-                  fontWeight: 500
+                  fontWeight: 600
                 })}
               />
-              <Typography variant="caption" color="text.secondary">
-                Created: {createdAt}
-              </Typography>
-              {avatarUrl && (
-                <Typography variant="caption" color="text.secondary">
-                  Avatar URL: {avatarUrl}
-                </Typography>
+              {user.isVerified && (
+                <Chip label="Verified" color="success" size="small" sx={{ fontWeight: 600 }} />
+              )}
+              {user.isFirstTime && (
+                <Chip label="First Login" color="info" size="small" sx={{ fontWeight: 600 }} />
               )}
             </Box>
           </Box>
-        </Box>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant="caption" color="text.secondary">
+              Created
+            </Typography>
+            <Typography variant="body2" fontWeight={600}>
+              {createdAt}
+            </Typography>
+            {avatarUrl && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.5, maxWidth: 240, wordBreak: 'break-all' }}
+              >
+                Avatar: {avatarUrl}
+              </Typography>
+            )}
+          </Box>
+        </Paper>
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Basic
-            </Typography>
-            {renderKeyValue('Gender', basic.gender)}
-            {renderKeyValue('Date of Birth', formatDate(basic.dateOfBirth))}
-            {renderKeyValue('Location', basic.location || user.location)}
-            {renderKeyValue(
-              'Languages',
-              Array.isArray(basic.languages) ? basic.languages.join(', ') : basic.languages
-            )}
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                Contact & Account
+              </Typography>
+              {renderField('Email', user.email)}
+              {renderField('Phone', user.mobile || user.phone)}
+              {renderField('Role', user.role)}
+              {renderField('Verified', user.isVerified ? 'Yes' : 'No')}
+              {renderField('First Time', user.isFirstTime ? 'Yes' : 'No')}
+              {renderField('Completed Profile', user.isCompleted ? 'Yes' : 'No')}
+            </Paper>
           </Grid>
+
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Goals
-            </Typography>
-            {renderObjectGrid(goals)}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Job Preferences
-            </Typography>
-            {renderObjectGrid(jobPreferences)}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Education
-            </Typography>
-            {renderList(education, renderEducationItem)}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Experiences
-            </Typography>
-            {renderList(experiences, renderExperienceItem)}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Certifications
-            </Typography>
-            {renderSimpleList(certifications)}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: 'primary.main', mb: 1 }}>
-              Skills
-            </Typography>
-            <Box sx={{ mb: 1.5 }}>
-              <Typography variant="caption" color="text.secondary">
-                Technical
+            <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                Profile Snapshot
               </Typography>
-              {renderSkills(technicalSkills)}
-            </Box>
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Soft
-              </Typography>
-              {renderSkills(softSkills)}
-            </Box>
+              {renderField('User ID', user._id || user.id)}
+              {renderField('Created', createdAt)}
+            </Paper>
           </Grid>
+
+          {isEmployer && (
+            <Grid item xs={12}>
+              <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                  Company
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    {renderField('Name', user.company?.name)}
+                    {renderField('Industry', user.company?.industry)}
+                    {renderField('Size', user.company?.size)}
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    {renderField('Website', user.company?.website)}
+                    {renderField('Location', user.company?.location)}
+                  </Grid>
+                  {user.company?.description && (
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">
+                        Description
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.5 }}>
+                        {user.company.description}
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
+            </Grid>
+          )}
+
+          {!isEmployer && !isAdmin && (
+            <>
+              <Grid item xs={12} md={6}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Basic Info
+                  </Typography>
+                  {renderField('Gender', user.basic?.gender)}
+                  {renderField('Date of Birth', formatDate(user.basic?.dateOfBirth))}
+                  {renderField('Location', user.basic?.location || user.location)}
+                  {renderField(
+                    'Languages',
+                    Array.isArray(user.basic?.languages) ? user.basic.languages.join(', ') : user.basic?.languages
+                  )}
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Goals
+                  </Typography>
+                  {user.goals?.careerGoal ? (
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {user.goals.careerGoal}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No goals provided
+                    </Typography>
+                  )}
+                  <Typography variant="caption" color="text.secondary">
+                    Interests
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                    {Array.isArray(user.goals?.interests) && user.goals.interests.length > 0 ? (
+                      user.goals.interests.map((interest, idx) => (
+                        <Chip key={idx} label={interest} size="small" />
+                      ))
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No interests listed
+                      </Typography>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Job Preferences
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={4}>
+                      {renderField(
+                        'Workplace Type',
+                        Array.isArray(user.jobPreferences?.workPlaceType)
+                          ? user.jobPreferences.workPlaceType.join(', ')
+                          : user.jobPreferences?.workPlaceType
+                      )}
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      {renderField(
+                        'Job Type',
+                        Array.isArray(user.jobPreferences?.jobType)
+                          ? user.jobPreferences.jobType.join(', ')
+                          : user.jobPreferences?.jobType
+                      )}
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      {renderField('Job Location', user.jobPreferences?.jobLocation)}
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Education
+                  </Typography>
+                  {Array.isArray(user.education) && user.education.length > 0 ? (
+                    <Box sx={{ display: 'grid', gap: 1.5 }}>
+                      {user.education.map((edu, idx) => (
+                        <Box key={idx} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {edu.degree} {edu.field ? `in ${edu.field}` : ''}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {edu.university} {edu.endYear ? `(${edu.endYear})` : ''}
+                          </Typography>
+                          {edu.GPA && (
+                            <Typography variant="caption" color="text.secondary">
+                              GPA: {edu.GPA}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No education data
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Experiences
+                  </Typography>
+                  {Array.isArray(user.experiences) && user.experiences.length > 0 ? (
+                    <Box sx={{ display: 'grid', gap: 1.5 }}>
+                      {user.experiences.map((exp, idx) => (
+                        <Box key={idx} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {exp.jobTitle || exp.title} {exp.company ? `at ${exp.company}` : ''}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {exp.location}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatDate(exp.startDate)} - {exp.isCurrent ? 'Present' : formatDate(exp.endDate)}
+                          </Typography>
+                          {exp.description && (
+                            <Typography variant="body2" sx={{ mt: 0.5 }}>
+                              {exp.description}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No experience data
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Certifications
+                  </Typography>
+                  {Array.isArray(user.certifications) && user.certifications.length > 0 ? (
+                    <Box sx={{ display: 'grid', gap: 1.5 }}>
+                      {user.certifications.map((cert, idx) => (
+                        <Box key={idx} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {cert.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Issuer: {cert.issuer}
+                          </Typography>
+                          {cert.issueDate && (
+                            <Typography variant="caption" color="text.secondary">
+                              Issued: {formatDate(cert.issueDate)}
+                            </Typography>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No certifications
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: 'primary.main', mb: 1.5 }}>
+                    Skills
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Technical
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
+                    {Array.isArray(user.skills?.technical_skills) && user.skills.technical_skills.length > 0 ? (
+                      user.skills.technical_skills.map((skill, idx) => (
+                        <Chip
+                          key={idx}
+                          label={`${skill.name}${skill.level ? ` (${skill.level}%)` : ''}`}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No technical skills
+                      </Typography>
+                    )}
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Soft
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                    {Array.isArray(user.skills?.soft_skills) && user.skills.soft_skills.length > 0 ? (
+                      user.skills.soft_skills.map((skill, idx) => (
+                        <Chip
+                          key={idx}
+                          label={`${skill.name}${skill.level ? ` (${skill.level}%)` : ''}`}
+                          size="small"
+                          color="secondary"
+                          variant="outlined"
+                        />
+                      ))
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No soft skills
+                      </Typography>
+                    )}
+                  </Box>
+                </Paper>
+              </Grid>
+            </>
+          )}
         </Grid>
       </DialogContent>
       <DialogActions>
