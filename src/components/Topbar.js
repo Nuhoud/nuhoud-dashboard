@@ -12,6 +12,8 @@ import {
   Divider,
   Chip,
   Tooltip,
+  Button,
+  CircularProgress,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -32,7 +34,7 @@ const Topbar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
-  const { notifications, unreadCount, markAllRead } = useNotifications();
+  const { notifications, unreadCount, markAllRead, loadMore, hasMore, loading, error } = useNotifications();
   
   const userRole = localStorage.getItem('userRole');
   const userName = localStorage.getItem('userName') || 'User';
@@ -223,7 +225,21 @@ const Topbar = () => {
           },
         }}
       >
-        {notifications.length === 0 && (
+        {loading && notifications.length === 0 && (
+          <MenuItem sx={{ py: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Loading notifications...
+            </Typography>
+          </MenuItem>
+        )}
+        {error && (
+          <MenuItem sx={{ py: 2 }}>
+            <Typography variant="body2" sx={{ color: 'error.main' }}>
+              {error.message || 'Failed to load notifications'}
+            </Typography>
+          </MenuItem>
+        )}
+        {notifications.length === 0 && !loading && (
           <MenuItem sx={{ py: 2 }}>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               No notifications yet
@@ -255,6 +271,21 @@ const Topbar = () => {
             </MenuItem>
           </React.Fragment>
         ))}
+        {hasMore && (
+          <>
+            {notifications.length > 0 && <Divider />}
+            <MenuItem sx={{ py: 2, justifyContent: 'center' }} onClick={loadMore} disabled={loading}>
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={14} /> : null}
+              >
+                {loading ? 'Loading...' : 'Load more'}
+              </Button>
+            </MenuItem>
+          </>
+        )}
       </Menu>
 
       {/* User Profile Menu */}
