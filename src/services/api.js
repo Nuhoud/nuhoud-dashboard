@@ -220,6 +220,13 @@ export const profileStepTwo = async (data) => {
 };
 
 // --- Job Offers & Applications API (Port 4000) ---
+export const JOB_STATUS_OPTIONS = [
+  'مفتوح',
+  'مغلق',
+  'منتهي الصلاحية',
+  'مسودة'
+];
+
 export const getJobOffers = async (params = {}, endpoint = '') => {
   const url = `/job-offers${endpoint ? `/${endpoint}` : ''}`;
   const response = await apiJobs.get(url, { 
@@ -229,10 +236,25 @@ export const getJobOffers = async (params = {}, endpoint = '') => {
   return response.data;
 };
 
-export const getEmployerJobs = async ({ page = 1, limit = 10, sortBy = 'postedAt', sortOrder = 'desc' } = {}) => {
+export const getActiveJobOffers = async (params = {}) => {
+  const response = await apiJobs.get('/job-offers/active', {
+    params,
+    headers: getAuthHeaders()
+  });
+  return response.data;
+};
+
+export const getEmployerJobs = async (params = {}) => {
   try {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'postedAt',
+      sortOrder = 'desc',
+      ...filters
+    } = params;
     const response = await apiJobs.get('/job-offers/employer/my-jobs', {
-      params: { page, limit, sortBy, sortOrder },
+      params: { page, limit, sortBy, sortOrder, ...filters },
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
@@ -243,6 +265,26 @@ export const getEmployerJobs = async ({ page = 1, limit = 10, sortBy = 'postedAt
     console.error('Error fetching employer jobs:', error);
     throw error;
   }
+};
+
+export const getEmployerJobsById = async (employerId, params = {}) => {
+  const response = await apiJobs.get(`/job-offers/employer/${employerId}`, {
+    params,
+    headers: getAuthHeaders()
+  });
+  return response.data;
+};
+
+export const getExpiringSoonJobs = async (days = 7) => {
+  const params = {};
+  if (Number.isFinite(days)) {
+    params.days = days;
+  }
+  const response = await apiJobs.get('/job-offers/expiring-soon', {
+    params,
+    headers: getAuthHeaders()
+  });
+  return response.data;
 };
 
 export const getApplicationsForJob = async (jobId) => {
@@ -324,12 +366,19 @@ export const deleteJobOffer = async (id) => {
 };
 
 export const getEmployerJobsAnalytics = async () => {
-  const response = await apiJobs.get('/job-offers/employer/analytics', { headers: getAuthHeaders() });
+  const response = await apiJobs.get('/job-offers/analytics', { headers: getAuthHeaders() });
   return response.data;
 };
 
 export const getJobOffersAnalytics = async () => {
   const response = await apiJobs.get('/job-offers/analytics', { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const getEmployerJobStatisticsById = async (employerId) => {
+  const response = await apiJobs.get(`/job-offers/statistics/employer/${employerId}`, {
+    headers: getAuthHeaders()
+  });
   return response.data;
 };
 
@@ -355,6 +404,16 @@ export const updateApplicationStatus = async (applicationId, data) => {
 
 export const deleteApplication = async (id) => {
   const response = await apiJobs.delete(`/application/${id}`, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const updateJobOfferStatus = async (id, status) => {
+  const response = await apiJobs.patch(`/job-offers/${id}/status`, { status }, { headers: getAuthHeaders() });
+  return response.data;
+};
+
+export const updateExpiredJobOffers = async () => {
+  const response = await apiJobs.patch('/job-offers/update-expired', null, { headers: getAuthHeaders() });
   return response.data;
 };
 

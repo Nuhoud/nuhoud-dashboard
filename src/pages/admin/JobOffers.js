@@ -11,6 +11,11 @@ import {
   IconButton, 
   Tooltip, 
   TextField, 
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid, 
   FormControl, 
   InputLabel, 
@@ -23,9 +28,20 @@ import {
   InputAdornment
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { getJobOffers } from '../../services/api';
+import { 
+  getActiveJobOffers,
+  getApiErrorMessage,
+  getEmployerJobStatisticsById,
+  getEmployerJobsById,
+  getJobOffers,
+  JOB_STATUS_OPTIONS,
+  updateExpiredJobOffers,
+  updateJobOfferStatus
+} from '../../services/api';
 import SearchIcon from '@mui/icons-material/Search';
 import PeopleIcon from '@mui/icons-material/People';
+import EditIcon from '@mui/icons-material/Edit';
+import UpdateIcon from '@mui/icons-material/Update';
 import { useNavigate } from 'react-router-dom';
 
 const experienceLevels = [
@@ -48,14 +64,11 @@ const jobTypes = [
   'تدريب'
 ];
 
-const statusOptions = [
-  'مفتوح',
-  'مغلق',
-  'منتهي الصلاحية',
-  'مسودة'
-];
+const statusOptions = JOB_STATUS_OPTIONS;
 
 const currencyOptions = ['USD', 'EUR', 'SYP'];
+
+const isValidMongoId = (value) => /^[a-fA-F0-9]{24}$/.test(value);
 
 // Default pagination
 const DEFAULT_PAGE = 1;
@@ -87,6 +100,18 @@ const JobOffers = () => {
     currency: 'SYP',
     q: '' // Search term
   });
+  const [viewMode, setViewMode] = useState('all');
+  const [scope, setScope] = useState('all');
+  const [employerId, setEmployerId] = useState('');
+  const [employerStats, setEmployerStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
+  const [updateExpiredOpen, setUpdateExpiredOpen] = useState(false);
+  const [updateExpiredLoading, setUpdateExpiredLoading] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [statusTarget, setStatusTarget] = useState(null);
+  const [statusValue, setStatusValue] = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
   
   const [snackbar, setSnackbar] = useState({ 
     open: false, 
@@ -220,7 +245,7 @@ const JobOffers = () => {
       field: 'actions',
       headerName: 'Actions',
       sortable: false,
-      width: 100,
+      width: 140,
       renderCell: (params) => (
         <Box>
           <Tooltip title="View Applications">
@@ -230,6 +255,15 @@ const JobOffers = () => {
               size="small"
             >
               <PeopleIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Update Status">
+            <IconButton
+              onClick={() => handleOpenStatusDialog(params.row)}
+              color="secondary"
+              size="small"
+            >
+              <EditIcon />
             </IconButton>
           </Tooltip>
         </Box>
@@ -272,37 +306,102 @@ const JobOffers = () => {
   const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
+      setError('');
       const params = buildQueryParams();
-      
-      // Use search endpoint if there's a search term, otherwise use regular endpoint
-      const endpoint = params.q ? 'search' : '';
-      const response = await getJobOffers(params, endpoint);
+      const effectiveParams = { ...params };
+
+      if (viewMode === 'active' && !effectiveParams.status) {
+        effectiveParams.status = statusOptions[0];
+      }
+
+      const { q, ...listParams } = effectiveParams;
+      const hasSearch = Boolean(q);
+      const inEmployerScope = scope === 'employer';
+      const hasValidEmployerId = inEmployerScope && isValidMongoId(employerId);
+
+      if (inEmployerScope && !hasValidEmployerId) {
+        setJobs([]);
+        setTotalCount(0);
+        setLoading(false);
+        setError(employerId ? 'Invalid employer ID.' : 'Enter an employer ID to view employer jobs.');
+        return;
+      }
+
+      let response;
+      if (hasValidEmployerId) {
+        if (hasSearch) {
+          response = await getJobOffers({ ...listParams, q, employerId }, 'search');
+        } else {
+          response = await getEmployerJobsById(employerId, listParams);
+        }
+      } else if (viewMode === 'active' && !hasSearch) {
+        response = await getActiveJobOffers(listParams);
+      } else {
+        const endpoint = hasSearch ? 'search' : '';
+        response = await getJobOffers({ ...listParams, q }, endpoint);
+      }
       
       setJobs(response.data || []);
       setTotalCount(response.total || 0);
     } catch (err) {
       console.error('Error fetching jobs:', err);
-      setError('Failed to load job offers. Please try again.');
+      const message = getApiErrorMessage(err, 'Failed to load job offers. Please try again.');
+      setError(message);
       setSnackbar({
         open: true,
-        message: 'Failed to load job offers',
+        message,
         severity: 'error'
       });
     } finally {
       setLoading(false);
     }
-  }, [buildQueryParams]);
+  }, [buildQueryParams, viewMode, scope, employerId]);
 
   // Fetch jobs when filters, pagination, or sorting changes
   useEffect(() => {
     fetchJobs();
   }, [fetchJobs]);
 
+  useEffect(() => {
+    if (scope !== 'employer' || !isValidMongoId(employerId)) {
+      setEmployerStats(null);
+      setStatsError('');
+      return;
+    }
+
+    let isActive = true;
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError('');
+        const data = await getEmployerJobStatisticsById(employerId);
+        if (isActive) {
+          setEmployerStats(data);
+        }
+      } catch (err) {
+        if (isActive) {
+          setStatsError(getApiErrorMessage(err, 'Failed to load employer stats.'));
+        }
+      } finally {
+        if (isActive) {
+          setStatsLoading(false);
+        }
+      }
+    };
+
+    fetchStats();
+
+    return () => {
+      isActive = false;
+    };
+  }, [scope, employerId]);
+
   const handleFilterChange = (field) => (event) => {
     setFilters(prev => ({
       ...prev,
       [field]: event.target.value
     }));
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
   const handleSearchChange = (event) => {
@@ -310,6 +409,7 @@ const JobOffers = () => {
       ...prev,
       q: event.target.value
     }));
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
   const handleResetFilters = () => {
@@ -325,6 +425,91 @@ const JobOffers = () => {
       currency: 'SYP',
       q: ''
     });
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleScopeChange = (event) => {
+    const nextScope = event.target.value;
+    setScope(nextScope);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+    if (nextScope !== 'employer') {
+      setEmployerId('');
+      setEmployerStats(null);
+      setStatsError('');
+    } else {
+      setFilters(prev => ({ ...prev, q: '' }));
+    }
+  };
+
+  const handleViewModeChange = (event) => {
+    setViewMode(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleEmployerIdChange = (event) => {
+    setEmployerId(event.target.value.trim());
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleOpenStatusDialog = (job) => {
+    setStatusTarget(job);
+    setStatusValue(job?.status || statusOptions[0] || '');
+    setStatusDialogOpen(true);
+  };
+
+  const handleCloseStatusDialog = () => {
+    setStatusDialogOpen(false);
+    setStatusTarget(null);
+    setStatusValue('');
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!statusTarget || !statusValue) return;
+    try {
+      setStatusUpdating(true);
+      await updateJobOfferStatus(statusTarget._id, statusValue);
+      setSnackbar({
+        open: true,
+        message: 'Job status updated successfully.',
+        severity: 'success'
+      });
+      handleCloseStatusDialog();
+      fetchJobs();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getApiErrorMessage(err, 'Failed to update job status.'),
+        severity: 'error'
+      });
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleUpdateExpiredConfirm = async () => {
+    try {
+      setUpdateExpiredLoading(true);
+      const result = await updateExpiredJobOffers();
+      setSnackbar({
+        open: true,
+        message: result?.message || 'Expired job offers updated.',
+        severity: 'success'
+      });
+      setUpdateExpiredOpen(false);
+      fetchJobs();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: getApiErrorMessage(err, 'Failed to update expired job offers.'),
+        severity: 'error'
+      });
+    } finally {
+      setUpdateExpiredLoading(false);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handlePaginationModelChange = (newPaginationModel) => {
@@ -375,6 +560,48 @@ const JobOffers = () => {
       <Divider />
       <CardContent>
         <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Scope</InputLabel>
+              <Select
+                value={scope}
+                onChange={handleScopeChange}
+                label="Scope"
+              >
+                <MenuItem value="all">All Jobs</MenuItem>
+                <MenuItem value="employer">Employer Jobs</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {scope === 'employer' && (
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                label="Employer ID"
+                value={employerId}
+                onChange={handleEmployerIdChange}
+                error={Boolean(employerId) && !isValidMongoId(employerId)}
+                helperText={employerId && !isValidMongoId(employerId) ? 'Enter a valid 24-character ID.' : ' '}
+                placeholder="e.g. 507f1f77bcf86cd799439011"
+              />
+            </Grid>
+          )}
+
+          <Grid item xs={12} sm={6} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>View</InputLabel>
+              <Select
+                value={viewMode}
+                onChange={handleViewModeChange}
+                label="View"
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="active">Active Only</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
           {/* Search */}
           <Grid item xs={12} md={4}>
             <TextField
@@ -382,6 +609,8 @@ const JobOffers = () => {
               label="Search"
               value={filters.q}
               onChange={handleSearchChange}
+              disabled={scope === 'employer'}
+              helperText={scope === 'employer' ? 'Search is disabled in employer scope.' : ' '}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -539,6 +768,58 @@ const JobOffers = () => {
     </Card>
   );
 
+  const renderEmployerStats = () => {
+    if (scope !== 'employer') return null;
+
+    return (
+      <Card sx={{ mb: 3 }}>
+        <CardHeader
+          title="Employer Statistics"
+          subheader={employerId ? `Employer ID: ${employerId}` : 'Provide an employer ID to load stats.'}
+        />
+        <Divider />
+        <CardContent>
+          {statsLoading && (
+            <Box display="flex" alignItems="center" justifyContent="center" minHeight={80}>
+              <CircularProgress size={24} />
+            </Box>
+          )}
+          {!statsLoading && statsError && (
+            <Alert severity="error">{statsError}</Alert>
+          )}
+          {!statsLoading && !statsError && employerStats && (
+            <Grid container spacing={2}>
+              {[
+                { label: 'Total', value: employerStats.total ?? 0 },
+                { label: 'Active', value: employerStats.active ?? 0 },
+                { label: 'Closed', value: employerStats.closed ?? 0 },
+                { label: 'Expired', value: employerStats.expired ?? 0 },
+                { label: 'Draft', value: employerStats.draft ?? 0 },
+                { label: 'Applications', value: employerStats.totalApplications ?? 0 }
+              ].map((item) => (
+                <Grid item xs={6} md={2} key={item.label}>
+                  <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {item.label}
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      {item.value}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+          {!statsLoading && !statsError && !employerStats && (
+            <Typography variant="body2" color="text.secondary">
+              Enter a valid employer ID to view statistics.
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   if (loading && jobs.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -553,6 +834,14 @@ const JobOffers = () => {
         <Typography variant="h4" sx={{ color: '#1976d2', fontWeight: 600 }}>
           Job Offers
         </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<UpdateIcon />}
+          onClick={() => setUpdateExpiredOpen(true)}
+          disabled={updateExpiredLoading}
+        >
+          Update Expired
+        </Button>
       </Box>
 
       {error && (
@@ -562,6 +851,7 @@ const JobOffers = () => {
       )}
 
       {renderFilters()}
+      {renderEmployerStats()}
 
       <Paper sx={{ height: 600, width: '100%' }}>
         <DataGrid
@@ -600,8 +890,83 @@ const JobOffers = () => {
           getRowId={(row) => row._id}
         />
       </Paper>
+
+      <Dialog
+        open={updateExpiredOpen}
+        onClose={() => setUpdateExpiredOpen(false)}
+      >
+        <DialogTitle>Update Expired Job Offers</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will mark any active job offers with past deadlines as expired. Continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUpdateExpiredOpen(false)} disabled={updateExpiredLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleUpdateExpiredConfirm}
+            disabled={updateExpiredLoading}
+          >
+            {updateExpiredLoading ? 'Updating...' : 'Update'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={statusDialogOpen}
+        onClose={handleCloseStatusDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Update Job Status</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Choose a new status for this job offer.
+          </DialogContentText>
+          <FormControl fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusValue}
+              onChange={(event) => setStatusValue(event.target.value)}
+              label="Status"
+            >
+              {statusOptions.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseStatusDialog} disabled={statusUpdating}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleUpdateStatus}
+            disabled={statusUpdating || !statusValue}
+          >
+            {statusUpdating ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
 export default JobOffers;
+

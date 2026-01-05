@@ -26,13 +26,38 @@ import {
   CircularProgress,
   Tooltip,
   Grid,
-  TablePagination
+  TablePagination,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  Chip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PeopleIcon from '@mui/icons-material/People';
-import { getEmployerJobs, deleteJobOffer, updateJobOffer } from '../../services/api';
+import { 
+  deleteJobOffer,
+  getApiErrorMessage,
+  getEmployerJobStatistics,
+  getEmployerJobs,
+  getExpiringSoonJobs,
+  JOB_STATUS_OPTIONS,
+  updateJobOffer
+} from '../../services/api';
+
+const experienceLevels = [
+  'Entry Level',
+  'Intership',
+  'Mid Level',
+  'Senior Level',
+  'Associate',
+  'Director',
+  'Executive'
+];
+
+const statusOptions = JOB_STATUS_OPTIONS;
 
 const MyJobs = () => {
   const navigate = useNavigate();
@@ -48,20 +73,51 @@ const MyJobs = () => {
   const [total, setTotal] = useState(0);
   const [sortBy, setSortBy] = useState('postedAt');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [filters, setFilters] = useState({
+    status: '',
+    jobLocation: '',
+    experienceLevel: ''
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    closed: 0,
+    expired: 0,
+    draft: 0,
+    totalApplications: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [expiringDays, setExpiringDays] = useState(7);
+  const [expiringJobs, setExpiringJobs] = useState([]);
+  const [expiringLoading, setExpiringLoading] = useState(false);
+  const [expiringError, setExpiringError] = useState('');
+
+  const buildQueryParams = () => {
+    const params = {
+      page: page + 1,
+      limit,
+      sortBy,
+      sortOrder
+    };
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        params[key] = value;
+      }
+    });
+
+    return params;
+  };
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await getEmployerJobs({
-        page: page + 1, // API is 1-based
-        limit,
-        sortBy,
-        sortOrder
-      });
+      setError('');
+      const response = await getEmployerJobs(buildQueryParams());
       setJobs(response.data || []);
       setTotal(response.total || 0);
     } catch (err) {
-      setError('Failed to load jobs. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to load jobs. Please try again.'));
       setJobs([]);
       setTotal(0);
     } finally {
@@ -69,10 +125,46 @@ const MyJobs = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await getEmployerJobStatistics();
+      setStats(response || {});
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Failed to load job statistics.'));
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchExpiringSoon = async () => {
+    try {
+      setExpiringLoading(true);
+      setExpiringError('');
+      const response = await getExpiringSoonJobs(expiringDays);
+      setExpiringJobs(Array.isArray(response) ? response : response?.data || []);
+    } catch (err) {
+      setExpiringError(getApiErrorMessage(err, 'Failed to load expiring jobs.'));
+      setExpiringJobs([]);
+    } finally {
+      setExpiringLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
     // eslint-disable-next-line
-  }, [page, limit, sortBy, sortOrder]);
+  }, [page, limit, sortBy, sortOrder, filters]);
+
+  useEffect(() => {
+    fetchStats();
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    fetchExpiringSoon();
+    // eslint-disable-next-line
+  }, [expiringDays]);
 
   const handleEdit = (job) => {
     setSelectedJob(job);
@@ -99,9 +191,11 @@ const MyJobs = () => {
       setSelectedJob(null);
       // Refresh the jobs list
       fetchJobs();
+      fetchStats();
+      fetchExpiringSoon();
     } catch (err) {
       console.error('Error deleting job:', err);
-      setError('Failed to delete job. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to delete job. Please try again.'));
     }
   };
 
@@ -113,9 +207,11 @@ const MyJobs = () => {
       setEditedJob(null);
       // Refresh the jobs list
       fetchJobs();
+      fetchStats();
+      fetchExpiringSoon();
     } catch (err) {
       console.error('Error updating job:', err);
-      setError('Failed to update job. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to update job. Please try again.'));
     }
   };
 
@@ -135,13 +231,26 @@ const MyJobs = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const handleFilterChange = (field) => (event) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }));
+    setPage(0);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      status: '',
+      jobLocation: '',
+      experienceLevel: ''
+    });
+    setPage(0);
+  };
+
+  const handleExpiringDaysChange = (event) => {
+    setExpiringDays(Number(event.target.value));
+  };
 
   const columns = [
     { field: 'title', headerName: 'Title', width: 200 },
@@ -201,6 +310,151 @@ const MyJobs = () => {
         </Alert>
       )}
 
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {statsLoading ? (
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <CircularProgress size={24} />
+            </Paper>
+          </Grid>
+        ) : (
+          [
+            { label: 'Total Jobs', value: stats.total ?? 0 },
+            { label: 'Active', value: stats.active ?? 0 },
+            { label: 'Closed', value: stats.closed ?? 0 },
+            { label: 'Expired', value: stats.expired ?? 0 },
+            { label: 'Draft', value: stats.draft ?? 0 },
+            { label: 'Applications', value: stats.totalApplications ?? 0 }
+          ].map((item) => (
+            <Grid item xs={6} md={2} key={item.label}>
+              <Paper sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary">
+                  {item.label}
+                </Typography>
+                <Typography variant="h6" fontWeight={600}>
+                  {item.value}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))
+        )}
+      </Grid>
+
+      <Card sx={{ mb: 3 }}>
+        <CardHeader
+          title="Filters"
+          action={
+            <Button variant="outlined" onClick={handleResetFilters}>
+              Reset
+            </Button>
+          }
+        />
+        <Divider />
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={filters.status}
+                  onChange={handleFilterChange('status')}
+                  label="Status"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {statusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Experience</InputLabel>
+                <Select
+                  value={filters.experienceLevel}
+                  onChange={handleFilterChange('experienceLevel')}
+                  label="Experience"
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {experienceLevels.map((level) => (
+                    <MenuItem key={level} value={level}>
+                      {level}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                label="Location"
+                value={filters.jobLocation}
+                onChange={handleFilterChange('jobLocation')}
+                placeholder="City or country"
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardHeader
+          title="Expiring Soon"
+          action={
+            <FormControl size="small">
+              <Select value={expiringDays} onChange={handleExpiringDaysChange}>
+                <MenuItem value={7}>Next 7 days</MenuItem>
+                <MenuItem value={14}>Next 14 days</MenuItem>
+                <MenuItem value={30}>Next 30 days</MenuItem>
+              </Select>
+            </FormControl>
+          }
+        />
+        <Divider />
+        <CardContent>
+          {expiringLoading && (
+            <Box display="flex" justifyContent="center">
+              <CircularProgress size={24} />
+            </Box>
+          )}
+          {!expiringLoading && expiringError && (
+            <Alert severity="error">{expiringError}</Alert>
+          )}
+          {!expiringLoading && !expiringError && expiringJobs.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No job offers are expiring in the selected window.
+            </Typography>
+          )}
+          {!expiringLoading && !expiringError && expiringJobs.length > 0 && (
+            <Box display="flex" flexDirection="column" gap={2}>
+              {expiringJobs.map((job) => (
+                <Box
+                  key={job._id}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box>
+                    <Typography variant="subtitle2">{job.title}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {job.jobLocation} • {job.jobType}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={new Date(job.deadline).toLocaleDateString()}
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
@@ -221,6 +475,7 @@ const MyJobs = () => {
                   <TableCell>Location</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Experience</TableCell>
+                  <TableCell>Status</TableCell>
                   <TableCell>Workplace</TableCell>
                   <TableCell>Deadline</TableCell>
                   <TableCell>Actions</TableCell>
@@ -233,6 +488,9 @@ const MyJobs = () => {
                     <TableCell>{job.jobLocation}</TableCell>
                     <TableCell>{job.jobType}</TableCell>
                     <TableCell>{job.experienceLevel}</TableCell>
+                    <TableCell>
+                      <Chip label={job.status || 'N/A'} size="small" variant="outlined" />
+                    </TableCell>
                     <TableCell>{job.workPlaceType}</TableCell>
                     <TableCell>
                       {new Date(job.deadline).toLocaleDateString()}
