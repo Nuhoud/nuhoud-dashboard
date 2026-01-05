@@ -231,7 +231,7 @@ export const getJobOffers = async (params = {}, endpoint = '') => {
 
 export const getEmployerJobs = async ({ page = 1, limit = 10, sortBy = 'postedAt', sortOrder = 'desc' } = {}) => {
   try {
-    const response = await apiJobs.get('/job-offers', {
+    const response = await apiJobs.get('/job-offers/employer/my-jobs', {
       params: { page, limit, sortBy, sortOrder },
       headers: {
         ...getAuthHeaders(),
